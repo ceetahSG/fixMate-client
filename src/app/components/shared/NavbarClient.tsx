@@ -75,10 +75,15 @@ export default function NavbarClient({ user }: NavbarClientProps) {
   };
 
   const roleLabel = user?.role || "Customer";
-  const dashboardHref =
-    roleLabel.toLowerCase() === "technician"
-      ? "/dashboard/technician"
-      : "/dashboard/customer";
+  let dashboardHref = "";
+
+  if (roleLabel.toLowerCase() === "admin") {
+    dashboardHref = "/dashboard/admin";
+  } else if (roleLabel.toLowerCase() === "technician") {
+    dashboardHref = "/dashboard/technician";
+  } else {
+    dashboardHref = "/dashboard/customer";
+  }
 
   return (
     <>

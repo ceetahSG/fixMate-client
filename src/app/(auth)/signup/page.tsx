@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 type Role = "Customer" | "Technician";
 
@@ -21,6 +22,7 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +52,7 @@ export default function SignUpPage() {
       console.error("Sign up error:", error);
     } else {
       console.log("Sign up successful:", data);
+      router.push("/"); // Redirect to sign-in page after successful sign-up
     }
   };
 
