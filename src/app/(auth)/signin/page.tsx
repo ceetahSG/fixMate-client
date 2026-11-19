@@ -2,22 +2,33 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import AuthLayout from "@/app/components/auth/AuthLayout";
+import AuthLayout from "@/app/(auth)/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth-client";
+import { auth } from "@/lib/auth";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({
-      email,
-      password,
+    const form = new FormData(e.currentTarget as HTMLFormElement);
+    const form_data = Object.fromEntries(form.entries());
+    console.log(form_data);
+    const { data, error } = await authClient.signIn.email({
+      email: email,
+      password: password,
+      // An optional URL to redirect to after the user signs in. (optional)
     });
+    if (error) {
+      console.error("Sign-in error:", error);
+    } else {
+      console.log("Sign-in successful:", data);
+    }
   };
 
   const handleGoogleSignIn = () => {
@@ -47,11 +58,15 @@ export default function SignInPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email Field */}
           <div className="space-y-1.5">
-            <Label htmlFor="email" className="text-sm font-medium text-slate-700">
+            <Label
+              htmlFor="email"
+              className="text-sm font-medium text-slate-700"
+            >
               Email
             </Label>
             <Input
               id="email"
+              name="email"
               type="email"
               placeholder="you@example.com"
               value={email}
@@ -72,6 +87,7 @@ export default function SignInPage() {
             <div className="relative">
               <Input
                 id="password"
+                name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
