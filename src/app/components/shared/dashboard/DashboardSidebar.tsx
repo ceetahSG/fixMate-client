@@ -137,7 +137,7 @@ export default function DashboardSidebar({ user }: DashboardSidebarProps) {
     },
     {
       label: "Manage Requests",
-      href: "/dashboard/technician/requests",
+      href: "/dashboard/technician/manage-request",
       icon: ClipboardCheck,
     },
     {

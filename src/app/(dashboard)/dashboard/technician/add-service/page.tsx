@@ -16,6 +16,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { authClient } from "@/lib/auth-client";
+import { addService } from "@/lib/actions/api/services";
+import { TServiceData } from "@/types";
 
 const categories = [
   "Smartphone",
@@ -46,7 +48,6 @@ export default function AddServicePage() {
   const [imageError, setImageError] = useState("");
   const [formError, setFormError] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
 
   const technicianName = session?.user?.name || "Farhana Ahmed";
   const technicianEmail = session?.user?.email || "farhana@example.com";
@@ -86,13 +87,11 @@ export default function AddServicePage() {
     setImageError("");
     setFormError("");
     setIsAvailable(true);
-    setIsSaving(false);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   }
-
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
@@ -106,8 +105,6 @@ export default function AddServicePage() {
       setFormError("Please select a service image.");
       return;
     }
-
-    setIsSaving(true);
 
     try {
       const uploadData = new FormData();
@@ -132,30 +129,27 @@ export default function AddServicePage() {
         serviceMode: mode,
         serviceArea: serviceArea.trim(),
         serviceImage: uploadResult.url,
+        image: uploadResult.url,
+        technicianName: technicianName,
+        technicianEmail: technicianEmail,
         status: "Pending",
+        approvalStatus: "Pending",
         isAvailable,
         createdAt: new Date().toISOString(),
       };
 
-      const serviceResponse = await fetch("/api/services", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(serviceData),
-      });
-      const serviceResult = await serviceResponse.json();
-
-      if (!serviceResponse.ok) {
-        throw new Error(serviceResult.message || "Could not save the service.");
+      console.log("Service data to be sent:", serviceData);
+      const res = await addService(serviceData as TServiceData);
+      if (res.insertedId) {
+        console.log("Service added successfully!");
+        resetForm();
+      } else {
+        throw new Error(res.message || "Could not save the service.");
       }
-
-      resetForm();
     } catch (error) {
       setFormError(
         error instanceof Error ? error.message : "Could not save the service.",
       );
-      setIsSaving(false);
     }
   }
 
@@ -488,17 +482,15 @@ export default function AddServicePage() {
               type="button"
               variant="outline"
               onClick={resetForm}
-              disabled={isSaving}
               className="h-10 rounded-lg border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 shadow-xs hover:bg-slate-50"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isSaving}
               className="h-10 rounded-lg bg-[#176b63] px-5 text-sm font-semibold text-white shadow-xs hover:bg-[#125851]"
             >
-              {isSaving ? "Saving..." : "Save Service"}
+              Save Service
             </Button>
           </div>
         </section>

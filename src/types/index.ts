@@ -7,3 +7,19 @@ export type TUser = {
   img?: string;
 };
 
+export type TServiceData = {
+  _id?: string;
+  title: string;
+  category: string;
+  description: string;
+  image: string;
+  basePrice: number;
+  estimatedDuration: string;
+  serviceMode: string;
+  serviceArea: string;
+  technicianName: string;
+  technicianEmail: string;
+  approvalStatus: "Pending" | "Approved" | "Rejected";
+  isAvailable: boolean;
+  createdAt: string;
+};

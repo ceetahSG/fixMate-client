@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-  const apiKey =
-    process.env.IMGBB_API_KEY || process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+  const apiKey = process.env.IMGBB_API_KEY;
 
   if (!apiKey) {
     return NextResponse.json(
@@ -21,18 +20,8 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!["image/png", "image/jpeg"].includes(image.type)) {
-    return NextResponse.json(
-      { message: "Only PNG and JPG images are supported." },
-      { status: 400 },
-    );
-  }
-
   const uploadData = new FormData();
-  uploadData.append("image", await image.arrayBuffer().then((buffer) => {
-    const bytes = new Uint8Array(buffer);
-    return new Blob([bytes], { type: image.type });
-  }), image.name);
+  uploadData.append("image", image);
 
   const response = await fetch(
     `https://api.imgbb.com/1/upload?key=${encodeURIComponent(apiKey)}`,
@@ -43,14 +32,12 @@ export async function POST(request: Request) {
   );
   const result = await response.json();
 
-  if (!response.ok || !result.success) {
+  if (!response.ok || !result.success || !result.data?.url) {
     return NextResponse.json(
       { message: result?.error?.message || "Image upload failed." },
       { status: 502 },
     );
   }
 
-  return NextResponse.json({
-    url: result.data.url as string,
-  });
+  return NextResponse.json({ url: result.data.url });
 }

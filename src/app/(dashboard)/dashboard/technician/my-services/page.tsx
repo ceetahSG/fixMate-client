@@ -32,19 +32,12 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { authClient } from "@/lib/auth-client";
+import { getMyServices } from "@/lib/actions/api/data";
+import { TServiceData } from "@/types";
+import { deleteService, updateService } from "@/lib/actions/api/services";
 
 type ServiceStatus = "Pending" | "Approved" | "Rejected";
-
-type Service = {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  description: string;
-  status: ServiceStatus;
-  isAvailable: boolean;
-  thumbnail: string;
-};
 
 const categories = [
   "Smartphone",
@@ -56,38 +49,8 @@ const categories = [
   "Other",
 ];
 
-const initialServices: Service[] = [
-  {
-    id: "svc-1",
-    name: "MacBook Performance Servicing",
-    category: "Laptop & PC",
-    price: 45,
-    description: "Professional repair and diagnostic service.",
-    status: "Approved",
-    isAvailable: true,
-    thumbnail: "/images/service-thumb-macbook.jpg",
-  },
-  {
-    id: "svc-2",
-    name: "Samsung AC Installation & Servicing",
-    category: "AC",
-    price: 52,
-    description: "AC installation, cleaning, and performance servicing.",
-    status: "Approved",
-    isAvailable: true,
-    thumbnail: "/images/service-thumb-tv.jpg",
-  },
-  {
-    id: "svc-3",
-    name: "Refrigerator Cooling Repair",
-    category: "Refrigerator",
-    price: 58,
-    description: "Cooling system diagnosis and refrigerator repair.",
-    status: "Rejected",
-    isAvailable: true,
-    thumbnail: "/images/hero-repair.jpg",
-  },
-];
+const { data: session } = await authClient.getSession();
+const initialServices = await getMyServices(session?.user?.email || "");
 
 const statusStyles: Record<ServiceStatus, string> = {
   Pending: "bg-[#fef6e7] text-[#c27803]",
@@ -96,68 +59,137 @@ const statusStyles: Record<ServiceStatus, string> = {
 };
 
 export default function MyServicesPage() {
-  const [services, setServices] = useState<Service[]>(initialServices);
+  const [services, setServices] = useState<TServiceData[]>(initialServices);
 
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [editingService, setEditingService] = useState<TServiceData | null>(
+    null,
+  );
   const [editTitle, setEditTitle] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [editDescription, setEditDescription] = useState("");
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [deletingService, setDeletingService] = useState<Service | null>(null);
+  const [deletingService, setDeletingService] = useState<TServiceData | null>(
+    null,
+  );
+  const [actionError, setActionError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  function toggleAvailability(id: string, isAvailable: boolean) {
+  async function toggleAvailability(id: string, isAvailable: boolean) {
+    if (!id) return;
+    setActionError("");
+
     setServices((currentServices) =>
       currentServices.map((service) =>
-        service.id === id ? { ...service, isAvailable } : service
-      )
+        service._id === id ? { ...service, isAvailable } : service,
+      ),
     );
+
+    try {
+      await updateService(id, { isAvailable });
+    } catch (error) {
+      setServices((currentServices) =>
+        currentServices.map((service) =>
+          service._id === id
+            ? { ...service, isAvailable: !isAvailable }
+            : service,
+        ),
+      );
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Could not update availability.",
+      );
+    }
   }
 
-  function openEditDialog(service: Service) {
+  function openEditDialog(service: TServiceData) {
     setEditingService(service);
-    setEditTitle(service.name);
+    setEditTitle(service.title);
     setEditCategory(service.category);
-    setEditPrice(String(service.price));
+    setEditPrice(String(service.basePrice));
     setEditDescription(service.description);
     setIsEditOpen(true);
   }
 
-  function handleSaveEdit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSaveEdit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!editingService) return;
+    if (!editingService?._id) {
+      setActionError("This service is missing an ID.");
+      return;
+    }
 
-    setServices((currentServices) =>
-      currentServices.map((service) =>
-        service.id === editingService.id
-          ? {
-              ...service,
-              name: editTitle.trim(),
-              category: editCategory,
-              price: Number(editPrice),
-              description: editDescription.trim(),
-              status: "Pending",
-            }
-          : service
-      )
-    );
-    setIsEditOpen(false);
+    setActionError("");
+    setIsSaving(true);
+
+    try {
+      await updateService(editingService._id, {
+        title: editTitle.trim(),
+        category: editCategory,
+        basePrice: Number(editPrice),
+        description: editDescription.trim(),
+        approvalStatus: "Pending",
+      });
+
+      setServices((currentServices) =>
+        currentServices.map((service) =>
+          service._id === editingService._id
+            ? {
+                ...service,
+                title: editTitle.trim(),
+                category: editCategory,
+                basePrice: Number(editPrice),
+                description: editDescription.trim(),
+                approvalStatus: "Pending",
+              }
+            : service,
+        ),
+      );
+      setIsEditOpen(false);
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Could not update the service.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   }
 
-  function openDeleteDialog(service: Service) {
+  function openDeleteDialog(service: TServiceData) {
     setDeletingService(service);
     setIsDeleteOpen(true);
   }
 
-  function confirmDelete() {
-    if (!deletingService) return;
+  async function confirmDelete() {
+    if (!deletingService?._id) {
+      setActionError("This service is missing an ID.");
+      return;
+    }
 
-    setServices((currentServices) =>
-      currentServices.filter((service) => service.id !== deletingService.id)
-    );
-    setIsDeleteOpen(false);
+    setActionError("");
+    setIsSaving(true);
+
+    try {
+      await deleteService(deletingService._id);
+      setServices((currentServices) =>
+        currentServices.filter(
+          (service) => service._id !== deletingService._id,
+        ),
+      );
+      setIsDeleteOpen(false);
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Could not delete the service.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -180,6 +212,15 @@ export default function MyServicesPage() {
           Add Service
         </Link>
       </div>
+
+      {actionError ? (
+        <p
+          className="rounded-lg border border-[#f6c9c9] bg-[#fdf2f2] px-4 py-3 text-sm text-[#b91c1c]"
+          role="alert"
+        >
+          {actionError}
+        </p>
+      ) : null}
 
       <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xs">
         <Table className="min-w-[900px]">
@@ -210,22 +251,22 @@ export default function MyServicesPage() {
             {services.length > 0 ? (
               services.map((service) => (
                 <TableRow
-                  key={service.id}
+                  key={service._id}
                   className="border-slate-100 hover:bg-slate-50/60"
                 >
                   <TableCell className="py-4 pl-6">
                     <div className="flex items-center gap-3">
                       <div className="relative size-10 shrink-0 overflow-hidden rounded-lg bg-slate-100">
                         <Image
-                          src={service.thumbnail}
-                          alt={service.name}
+                          src={service.image}
+                          alt={service.title}
                           fill
                           sizes="40px"
                           className="object-cover"
                         />
                       </div>
                       <span className="font-semibold text-slate-900">
-                        {service.name}
+                        {service.title}
                       </span>
                     </div>
                   </TableCell>
@@ -235,17 +276,17 @@ export default function MyServicesPage() {
                   </TableCell>
 
                   <TableCell className="py-4 font-semibold text-slate-900">
-                    ${service.price}
+                    ${service.basePrice}
                   </TableCell>
 
                   <TableCell className="py-4">
                     <span
                       className={cn(
                         "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
-                        statusStyles[service.status]
+                        statusStyles[service.approvalStatus],
                       )}
                     >
-                      {service.status}
+                      {service.approvalStatus}
                     </span>
                   </TableCell>
 
@@ -253,9 +294,9 @@ export default function MyServicesPage() {
                     <Switch
                       checked={service.isAvailable}
                       onCheckedChange={(checked) =>
-                        toggleAvailability(service.id, checked)
+                        toggleAvailability(service._id || "", checked)
                       }
-                      aria-label={`Toggle availability for ${service.name}`}
+                      aria-label={`Toggle availability for ${service.title}`}
                       className="data-checked:bg-[#176b63]"
                     />
                   </TableCell>
@@ -265,7 +306,7 @@ export default function MyServicesPage() {
                       <button
                         type="button"
                         onClick={() => openEditDialog(service)}
-                        aria-label={`Edit ${service.name}`}
+                        aria-label={`Edit ${service.title}`}
                         className="inline-flex size-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-xs transition-colors hover:bg-slate-50 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-[#176b63]/30 focus-visible:outline-none"
                       >
                         <Pencil className="size-4" />
@@ -273,7 +314,7 @@ export default function MyServicesPage() {
                       <button
                         type="button"
                         onClick={() => openDeleteDialog(service)}
-                        aria-label={`Delete ${service.name}`}
+                        aria-label={`Delete ${service.title}`}
                         className="inline-flex size-8 items-center justify-center rounded-md border border-slate-200 bg-white text-[#b91c1c] shadow-xs transition-colors hover:bg-[#fdf2f2] focus-visible:ring-2 focus-visible:ring-[#b91c1c]/30 focus-visible:outline-none"
                       >
                         <Trash2 className="size-4" />
@@ -397,9 +438,7 @@ export default function MyServicesPage() {
                   <Textarea
                     id="edit-service-description"
                     value={editDescription}
-                    onChange={(event) =>
-                      setEditDescription(event.target.value)
-                    }
+                    onChange={(event) => setEditDescription(event.target.value)}
                     required
                     className="min-h-[100px] resize-none rounded-lg border-slate-300 bg-white text-sm shadow-xs"
                   />
@@ -407,7 +446,9 @@ export default function MyServicesPage() {
 
                 <div className="flex items-start gap-2.5 rounded-lg bg-[#fdf6e8] px-3.5 py-3 text-xs text-[#b45309]">
                   <Clock className="mt-0.5 size-4 shrink-0" />
-                  <p>Editing this service will return it to Pending approval.</p>
+                  <p>
+                    Editing this service will return it to Pending approval.
+                  </p>
                 </div>
               </div>
 
@@ -417,9 +458,10 @@ export default function MyServicesPage() {
                 </DialogClose>
                 <Button
                   type="submit"
+                  disabled={isSaving}
                   className="h-10 rounded-lg bg-[#176b63] px-5 text-sm font-semibold text-white shadow-xs hover:bg-[#125851]"
                 >
-                  Save &amp; Resubmit
+                  {isSaving ? "Saving..." : "Save & Resubmit"}
                 </Button>
               </div>
             </form>
@@ -447,7 +489,7 @@ export default function MyServicesPage() {
 
               <div className="px-6 py-5">
                 <DialogDescription className="text-sm leading-6 text-slate-600">
-                  {`This will permanently remove “${deletingService.name}” from your services.`}
+                  {`This will permanently remove “${deletingService.title}” from your services.`}
                 </DialogDescription>
               </div>
 
@@ -457,9 +499,10 @@ export default function MyServicesPage() {
                 </DialogClose>
                 <Button
                   onClick={confirmDelete}
+                  disabled={isSaving}
                   className="h-10 rounded-lg border border-[#f6c9c9] bg-[#fdf2f2] px-5 text-sm font-semibold text-[#b91c1c] shadow-xs hover:bg-[#fbe7e7] hover:text-[#991b1b]"
                 >
-                  Delete Service
+                  {isSaving ? "Deleting..." : "Delete Service"}
                 </Button>
               </div>
             </>
