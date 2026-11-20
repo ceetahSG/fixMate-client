@@ -81,7 +81,7 @@ export default function DashboardSidebar({ user }: DashboardSidebarProps) {
     },
     {
       label: "Update Profile",
-      href: "/dashboard/profile",
+      href: "/dashboard/update-profile",
       icon: UserRound,
     },
   ];
@@ -114,7 +114,7 @@ export default function DashboardSidebar({ user }: DashboardSidebarProps) {
     },
     {
       label: "Update Profile",
-      href: "/dashboard/profile",
+      href: "/dashboard/update-profile",
       icon: UserRound,
     },
   ];
@@ -142,7 +142,7 @@ export default function DashboardSidebar({ user }: DashboardSidebarProps) {
     },
     {
       label: "Update Profile",
-      href: "/dashboard/profile",
+      href: "/dashboard/update-profile",
       icon: UserRound,
     },
   ];

@@ -163,7 +163,7 @@ export default function NavbarClient({ user }: NavbarClientProps) {
                 {roleLabel} Dashboard
               </DropdownMenuItem>
               <DropdownMenuItem
-                render={<Link href="/profile" />}
+                render={<Link href="/dashboard/update-profile" />}
                 className="cursor-pointer gap-2.5 rounded-md px-2.5 py-2.5"
               >
                 <UserRound className="size-4" />
