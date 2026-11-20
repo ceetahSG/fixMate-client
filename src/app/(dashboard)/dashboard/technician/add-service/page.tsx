@@ -46,6 +46,7 @@ export default function AddServicePage() {
   const [imageError, setImageError] = useState("");
   const [formError, setFormError] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   const technicianName = session?.user?.name || "Farhana Ahmed";
   const technicianEmail = session?.user?.email || "farhana@example.com";
@@ -85,13 +86,14 @@ export default function AddServicePage() {
     setImageError("");
     setFormError("");
     setIsAvailable(true);
+    setIsSaving(false);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
 
@@ -100,31 +102,61 @@ export default function AddServicePage() {
       return;
     }
 
-    const formData = {
-      title: title.trim(),
-      category,
-      basePrice: Number(price),
-      description: description.trim(),
-      estimatedDuration: duration.trim(),
-      serviceMode: mode,
-      serviceArea: serviceArea.trim(),
-      serviceImage: imageFile
-        ? {
-            name: imageFile.name,
-            size: imageFile.size,
-            type: imageFile.type,
-          }
-        : null,
-      technician: {
-        name: technicianName,
-        email: technicianEmail,
-      },
-      status: "Pending",
-      isAvailable,
-      createdAt: new Date().toISOString(),
-    };
+    if (!imageFile) {
+      setFormError("Please select a service image.");
+      return;
+    }
 
-    console.log("Add service form data:", formData);
+    setIsSaving(true);
+
+    try {
+      const uploadData = new FormData();
+      uploadData.append("image", imageFile);
+
+      const uploadResponse = await fetch("/api/upload/imgbb", {
+        method: "POST",
+        body: uploadData,
+      });
+      const uploadResult = await uploadResponse.json();
+
+      if (!uploadResponse.ok) {
+        throw new Error(uploadResult.message || "Image upload failed.");
+      }
+
+      const serviceData = {
+        title: title.trim(),
+        category,
+        basePrice: Number(price),
+        description: description.trim(),
+        estimatedDuration: duration.trim(),
+        serviceMode: mode,
+        serviceArea: serviceArea.trim(),
+        serviceImage: uploadResult.url,
+        status: "Pending",
+        isAvailable,
+        createdAt: new Date().toISOString(),
+      };
+
+      const serviceResponse = await fetch("/api/services", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(serviceData),
+      });
+      const serviceResult = await serviceResponse.json();
+
+      if (!serviceResponse.ok) {
+        throw new Error(serviceResult.message || "Could not save the service.");
+      }
+
+      resetForm();
+    } catch (error) {
+      setFormError(
+        error instanceof Error ? error.message : "Could not save the service.",
+      );
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -456,15 +488,17 @@ export default function AddServicePage() {
               type="button"
               variant="outline"
               onClick={resetForm}
+              disabled={isSaving}
               className="h-10 rounded-lg border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 shadow-xs hover:bg-slate-50"
             >
               Cancel
             </Button>
             <Button
               type="submit"
+              disabled={isSaving}
               className="h-10 rounded-lg bg-[#176b63] px-5 text-sm font-semibold text-white shadow-xs hover:bg-[#125851]"
             >
-              Save Service
+              {isSaving ? "Saving..." : "Save Service"}
             </Button>
           </div>
         </section>
