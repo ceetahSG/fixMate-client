@@ -65,7 +65,7 @@ export default function Footer() {
             <ul className="mt-3.5 space-y-2.5 text-xs text-slate-300/80 sm:text-[13px]">
               <li>
                 <Link
-                  href="/services?category=smartphone"
+                  href="/services?category=Smartphone"
                   className="transition-colors hover:text-white"
                 >
                   Smartphone
@@ -73,7 +73,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/services?category=laptop-pc"
+                  href="/services?category=Laptop%20%26%20PC"
                   className="transition-colors hover:text-white"
                 >
                   Laptop &amp; PC
@@ -81,7 +81,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/services?category=ac"
+                  href="/services?category=AC"
                   className="transition-colors hover:text-white"
                 >
                   AC
@@ -89,7 +89,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/services?category=refrigerator"
+                  href="/services?category=Refrigerator"
                   className="transition-colors hover:text-white"
                 >
                   Refrigerator
@@ -97,7 +97,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/services?category=tv"
+                  href="/services?category=TV"
                   className="transition-colors hover:text-white"
                 >
                   TV

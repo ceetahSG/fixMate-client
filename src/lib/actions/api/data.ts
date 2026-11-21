@@ -13,8 +13,9 @@ export const getMyServices = async (technicianEmail: string) => {
   return response.json();
 };
 
-export const getServices = async () => {
-  const response = await fetch(`${baseUrl}/services`, {
+export const getServices = async (query = "") => {
+  const url = query ? `${baseUrl}/services?${query}` : `${baseUrl}/services`;
+  const response = await fetch(url, {
     cache: "no-store",
   });
 
@@ -30,11 +31,14 @@ export const getUsers = async () => {
   return response.json();
 };
 
-export const getMarketplaceServices = async (): Promise<
-  MarketplaceService[]
-> => {
+export const getMarketplaceServices = async (
+  categoryName = "",
+): Promise<MarketplaceService[]> => {
   try {
-    const data = await getServices();
+    const query = categoryName
+      ? new URLSearchParams({ category: categoryName }).toString()
+      : "";
+    const data = await getServices(query);
 
     if (!Array.isArray(data)) return [];
 

@@ -76,7 +76,7 @@ export default function CategoriesSection() {
             return (
               <Link
                 key={cat.id}
-                href={`/services?category=${cat.id}`}
+                href={`/services?category=${encodeURIComponent(cat.name)}`}
                 className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-2xs transition-all hover:border-[#176b63]/50 hover:shadow-xs sm:p-4"
               >
                 <div className="flex items-center gap-3">

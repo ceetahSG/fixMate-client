@@ -7,8 +7,34 @@ export const metadata = {
     "Explore trusted repair professionals and find the right service for your device.",
 };
 
-export default async function ServicesPage() {
-  const services = await getMarketplaceServices();
+export default async function ServicesPage({
+  searchParams,
+}: {
+  searchParams:
+    | Promise<{ [key: string]: string | string[] | undefined }>
+    | { [key: string]: string | string[] | undefined };
+}) {
+  const search = await searchParams;
+  const categoryParam =
+    typeof search.category === "string" ? search.category : "";
+  const categoryAliases: Record<string, string> = {
+    smartphone: "Smartphone",
+    "laptop-pc": "Laptop & PC",
+    ac: "AC",
+    refrigerator: "Refrigerator",
+    tv: "TV",
+    "washing-machine": "Washing Machine",
+    electrical: "Electrical",
+  };
+  const category =
+    categoryAliases[categoryParam.toLowerCase()] ?? categoryParam;
+  const services = await getMarketplaceServices(category);
 
-  return <ServicesExplorer services={services} />;
+  return (
+    <ServicesExplorer
+      key={category || "all"}
+      services={services}
+      initialCategory={category}
+    />
+  );
 }

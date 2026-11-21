@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import ServiceCard from "@/app/components/shared/ServiceCard";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import {
 
 type ServicesExplorerProps = {
   services: MarketplaceService[];
+  initialCategory?: string;
 };
 
 type SortOption = "newest" | "price-low" | "price-high";
@@ -28,9 +30,13 @@ const sortLabels: Record<SortOption, string> = {
   "price-high": "Price: High to Low",
 };
 
-export default function ServicesExplorer({ services }: ServicesExplorerProps) {
+export default function ServicesExplorer({
+  services,
+  initialCategory = "",
+}: ServicesExplorerProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("all");
+  const [category, setCategory] = useState(initialCategory || "all");
   const [mode, setMode] = useState("all");
   const [sort, setSort] = useState<SortOption>("newest");
 
@@ -83,6 +89,21 @@ export default function ServicesExplorer({ services }: ServicesExplorerProps) {
     setCategory("all");
     setMode("all");
     setSort("newest");
+    router.replace("/services");
+  }
+
+  function changeCategory(value: string | null) {
+    const nextCategory = value ?? "all";
+    setCategory(nextCategory);
+
+    if (nextCategory === "all") {
+      router.replace("/services");
+      return;
+    }
+
+    router.replace(
+      `/services?category=${encodeURIComponent(nextCategory)}`,
+    );
   }
 
   return (
@@ -116,7 +137,7 @@ export default function ServicesExplorer({ services }: ServicesExplorerProps) {
 
             <Select
               value={category}
-              onValueChange={(value) => setCategory(value ?? "all")}
+              onValueChange={changeCategory}
             >
               <SelectTrigger
                 aria-label="Filter by category"
