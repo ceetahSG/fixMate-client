@@ -17,3 +17,25 @@ export async function deleteBooking(bookingId: string) {
   revalidatePath("/dashboard/customer/my-booking");
   return result;
 }
+
+export const updateBookingStatus = async (
+  bookingId: string,
+  status: "accepted" | "rejected" | "completed" | "in-progress",
+) => {
+  const response = await fetch(`${baseUrl}/bookings/${bookingId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  const result = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(result?.message || "Could not update the booking status.");
+  }
+
+  revalidatePath("/dashboard/customer/my-booking");
+  revalidatePath("/dashboard/technician/manage-request");
+  return result;
+};

@@ -51,6 +51,7 @@ const categories = [
 
 const { data: session } = await authClient.getSession();
 const initialServices = await getMyServices(session?.user?.email || "");
+console.log("Initial services fetched:", initialServices);
 
 const statusStyles: Record<ServiceStatus, string> = {
   Pending: "bg-[#fef6e7] text-[#c27803]",

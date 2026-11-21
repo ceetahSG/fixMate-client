@@ -27,7 +27,7 @@ const statusLabels: Record<string, string> = {
   requested: "Requested",
   "in-progress": "In Progress",
   completed: "Completed",
-  cancelled: "Cancelled",
+  rejected: "Rejected",
 };
 
 const statusStyles: Record<string, string> = {
