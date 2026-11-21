@@ -4,3 +4,8 @@ export const getMyServices = async (technicianEmail: string) => {
   const response = await fetch(`${baseUrl}/services/${technicianEmail}`);
   return response.json();
 };
+
+export const getServices = async () => {
+  const response = await fetch(`${baseUrl}/services`);
+  return response.json();
+};

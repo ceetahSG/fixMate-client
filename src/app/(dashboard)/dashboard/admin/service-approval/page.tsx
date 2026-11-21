@@ -19,65 +19,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { getServices } from "@/lib/actions/api/data";
+import { TServiceData } from "@/types";
+import { updateService } from "@/lib/actions/api/services";
 
 type ServiceStatus = "Pending" | "Approved" | "Rejected";
 type TabValue = "pending" | "all" | "approved" | "rejected";
 
-type Service = {
-  id: string;
-  name: string;
-  technician: string;
-  category: string;
-  price: number;
-  status: ServiceStatus;
-  thumbnail: string;
-};
-
-const initialServices: Service[] = [
-  {
-    id: "svc-1",
-    name: "MacBook Performance Servicing",
-    technician: "Nabila Islam",
-    category: "Laptop & PC",
-    price: 45,
-    status: "Pending",
-    thumbnail: "/images/service-thumb-macbook.jpg",
-  },
-  {
-    id: "svc-2",
-    name: "Samsung AC Installation & Servicing",
-    technician: "Tariq Hasan",
-    category: "AC",
-    price: 52,
-    status: "Pending",
-    thumbnail: "/images/service-thumb-tv.jpg",
-  },
-  {
-    id: "svc-3",
-    name: "iPhone Screen Replacement",
-    technician: "Nabila Islam",
-    category: "Smartphone",
-    price: 65,
-    status: "Approved",
-    thumbnail: "/images/service-thumb-iphone.jpg",
-  },
-  {
-    id: "svc-4",
-    name: "Smart TV Display Repair",
-    technician: "Tariq Hasan",
-    category: "TV",
-    price: 82,
-    status: "Rejected",
-    thumbnail: "/images/service-thumb-tv.jpg",
-  },
-];
+const initialServices = await getServices();
 
 const statusStyles: Record<ServiceStatus, string> = {
   Pending: "border-[#fae3b8] bg-[#fef6e7] text-[#c27803]",
@@ -86,10 +37,11 @@ const statusStyles: Record<ServiceStatus, string> = {
 };
 
 type ServiceTableProps = {
-  services: Service[];
+  services: TServiceData[];
   emptyMessage: string;
   onApprove: (id: string) => void;
-  onReject: (service: Service) => void;
+  onReject: (service: TServiceData) => void;
+  updatingId: string | null;
 };
 
 function ServiceTable({
@@ -97,6 +49,7 @@ function ServiceTable({
   emptyMessage,
   onApprove,
   onReject,
+  updatingId,
 }: ServiceTableProps) {
   return (
     <Table className="min-w-[960px]">
@@ -127,28 +80,28 @@ function ServiceTable({
         {services.length > 0 ? (
           services.map((service) => (
             <TableRow
-              key={service.id}
+              key={service._id}
               className="border-slate-100 hover:bg-slate-50/60"
             >
               <TableCell className="py-5 pl-6">
                 <div className="flex items-center gap-3">
                   <div className="relative size-11 shrink-0 overflow-hidden rounded-lg bg-slate-100">
                     <Image
-                      src={service.thumbnail}
-                      alt={service.name}
+                      src={service.image}
+                      alt={service.title}
                       fill
                       sizes="44px"
                       className="object-cover"
                     />
                   </div>
                   <span className="font-semibold text-slate-900">
-                    {service.name}
+                    {service.title}
                   </span>
                 </div>
               </TableCell>
 
               <TableCell className="py-5 text-slate-600">
-                {service.technician}
+                {service.technicianName}
               </TableCell>
 
               <TableCell className="py-5 text-slate-600">
@@ -156,35 +109,37 @@ function ServiceTable({
               </TableCell>
 
               <TableCell className="py-5 text-slate-600">
-                ${service.price}
+                ${service.basePrice}
               </TableCell>
 
               <TableCell className="py-5">
                 <span
                   className={cn(
                     "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold",
-                    statusStyles[service.status]
+                    statusStyles[service.approvalStatus],
                   )}
                 >
-                  {service.status}
+                  {service.approvalStatus}
                 </span>
               </TableCell>
 
               <TableCell className="py-5 pr-6">
-                {service.status === "Pending" ? (
+                {service.approvalStatus === "Pending" ? (
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       onClick={() => onReject(service)}
+                      disabled={updatingId === service._id}
                       className="h-9 rounded-lg border-[#f6c9c9] bg-[#fdf2f2] px-4 text-sm font-semibold text-[#b91c1c] shadow-xs hover:bg-[#fbe7e7] hover:text-[#991b1b]"
                     >
                       Reject
                     </Button>
                     <Button
-                      onClick={() => onApprove(service.id)}
+                      onClick={() => onApprove(service._id!)}
+                      disabled={updatingId === service._id}
                       className="h-9 rounded-lg bg-[#176b63] px-4 text-sm font-semibold text-white shadow-xs hover:bg-[#125851]"
                     >
-                      Approve
+                      {updatingId === service._id ? "Updating..." : "Approve"}
                     </Button>
                   </div>
                 ) : (
@@ -209,50 +164,89 @@ function ServiceTable({
 }
 
 export default function ServiceApprovalPage() {
-  const [services, setServices] = useState<Service[]>(initialServices);
+  const [services, setServices] = useState<TServiceData[]>(initialServices);
   const [activeTab, setActiveTab] = useState<TabValue>("pending");
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
-  const [activeService, setActiveService] = useState<Service | null>(null);
+  const [activeService, setActiveService] = useState<TServiceData | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState("");
 
   const counts = useMemo(
     () => ({
-      pending: services.filter((service) => service.status === "Pending").length,
-      approved: services.filter((service) => service.status === "Approved")
-        .length,
-      rejected: services.filter((service) => service.status === "Rejected")
-        .length,
+      pending: services.filter(
+        (service) => service.approvalStatus === "Pending",
+      ).length,
+      approved: services.filter(
+        (service) => service.approvalStatus === "Approved",
+      ).length,
+      rejected: services.filter(
+        (service) => service.approvalStatus === "Rejected",
+      ).length,
     }),
-    [services]
+    [services],
   );
 
   function getServices(status: ServiceStatus) {
-    return services.filter((service) => service.status === status);
+    return services.filter((service) => service.approvalStatus === status);
   }
 
-  function approveService(id: string) {
-    setServices((currentServices) =>
-      currentServices.map((service) =>
-        service.id === id ? { ...service, status: "Approved" } : service
-      )
-    );
+  async function approveService(id: string) {
+    if (!id || updatingId) return;
+
+    setActionError("");
+    setUpdatingId(id);
+
+    try {
+      await updateService(id, { approvalStatus: "Approved" });
+      setServices((currentServices) =>
+        currentServices.map((service) =>
+          service._id === id
+            ? { ...service, approvalStatus: "Approved" }
+            : service,
+        ),
+      );
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Could not approve the service.",
+      );
+    } finally {
+      setUpdatingId(null);
+    }
   }
 
-  function openRejectDialog(service: Service) {
+  function openRejectDialog(service: TServiceData) {
     setActiveService(service);
     setIsRejectDialogOpen(true);
   }
 
-  function confirmRejectService() {
-    if (!activeService) return;
+  async function confirmRejectService() {
+    if (!activeService?._id || updatingId) return;
 
-    setServices((currentServices) =>
-      currentServices.map((service) =>
-        service.id === activeService.id
-          ? { ...service, status: "Rejected" }
-          : service
-      )
-    );
-    setIsRejectDialogOpen(false);
+    setActionError("");
+    setUpdatingId(activeService._id);
+
+    try {
+      await updateService(activeService._id, { approvalStatus: "Rejected" });
+      setServices((currentServices) =>
+        currentServices.map((service) =>
+          service._id === activeService._id
+            ? { ...service, approvalStatus: "Rejected" }
+            : service,
+        ),
+      );
+      setIsRejectDialogOpen(false);
+      setActiveService(null);
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Could not reject the service.",
+      );
+    } finally {
+      setUpdatingId(null);
+    }
   }
 
   return (
@@ -265,6 +259,15 @@ export default function ServiceApprovalPage() {
           Review technician submissions before they appear publicly.
         </p>
       </div>
+
+      {actionError ? (
+        <p
+          className="rounded-lg border border-[#f6c9c9] bg-[#fdf2f2] px-4 py-3 text-sm text-[#b91c1c]"
+          role="alert"
+        >
+          {actionError}
+        </p>
+      ) : null}
 
       <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xs">
         <Tabs
@@ -315,6 +318,7 @@ export default function ServiceApprovalPage() {
               emptyMessage="No services are waiting for approval."
               onApprove={approveService}
               onReject={openRejectDialog}
+              updatingId={updatingId}
             />
           </TabsContent>
 
@@ -324,6 +328,7 @@ export default function ServiceApprovalPage() {
               emptyMessage="No services have been submitted yet."
               onApprove={approveService}
               onReject={openRejectDialog}
+              updatingId={updatingId}
             />
           </TabsContent>
 
@@ -333,6 +338,7 @@ export default function ServiceApprovalPage() {
               emptyMessage="No services have been approved yet."
               onApprove={approveService}
               onReject={openRejectDialog}
+              updatingId={updatingId}
             />
           </TabsContent>
 
@@ -342,6 +348,7 @@ export default function ServiceApprovalPage() {
               emptyMessage="No services have been rejected."
               onApprove={approveService}
               onReject={openRejectDialog}
+              updatingId={updatingId}
             />
           </TabsContent>
         </Tabs>
@@ -375,9 +382,12 @@ export default function ServiceApprovalPage() {
             </DialogClose>
             <Button
               onClick={confirmRejectService}
+              disabled={updatingId === activeService?._id}
               className="h-10 rounded-lg border border-[#f6c9c9] bg-[#fdf2f2] px-5 text-sm font-semibold text-[#b91c1c] shadow-xs hover:bg-[#fbe7e7] hover:text-[#991b1b]"
             >
-              Reject Service
+              {updatingId === activeService?._id
+                ? "Updating..."
+                : "Reject Service"}
             </Button>
           </div>
         </DialogContent>

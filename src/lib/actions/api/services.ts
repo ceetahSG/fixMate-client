@@ -39,7 +39,6 @@ export const deleteService = async (serviceId: string) => {
   });
 
   const result = await response.json();
-  console.log("Delete service response:", result);
   if (!response.ok) {
     throw new Error(result?.message || "Could not delete the service.");
   }
