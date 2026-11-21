@@ -1,4 +1,4 @@
-import { TServiceData } from "@/types";
+import { tBookingData, TServiceData } from "@/types";
 
 const baseUrl = process.env.BACKEND_URL || "http://localhost:5000";
 
@@ -60,6 +60,22 @@ export const updateUsers = async (
   const result = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(result?.message || "Could not update the user role.");
+  }
+  return result;
+};
+
+export const addBooking = async (bookingData: tBookingData) => {
+  const response = await fetch(`${baseUrl}/bookings`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(bookingData),
+  });
+
+  const result = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(result?.message || "Could not submit the booking.");
   }
   return result;
 };

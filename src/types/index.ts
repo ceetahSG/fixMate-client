@@ -23,3 +23,22 @@ export type TServiceData = {
   isAvailable: boolean;
   createdAt: string;
 };
+
+export type tBookingData = {
+  serviceId: string;
+  serviceTitle: string;
+  serviceImage: string;
+  category: string;
+  basePrice: number;
+  technicianName: string;
+  technicianEmail: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  address: string;
+  preferredDate: string;
+  problemDescription: string;
+  status: "requested" | "in-progress" | "completed" | "cancelled";
+  finalAmount: number;
+  paymentStatus: "unpaid" | "paid";
+};
