@@ -44,3 +44,22 @@ export const deleteService = async (serviceId: string) => {
   }
   return result;
 };
+
+export const updateUsers = async (
+  userId: string,
+  updatedData: Partial<{ role: "Customer" | "Technician" | "Admin" }>,
+) => {
+  const response = await fetch(`${baseUrl}/users/${userId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(updatedData),
+  });
+
+  const result = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(result?.message || "Could not update the user role.");
+  }
+  return result;
+};

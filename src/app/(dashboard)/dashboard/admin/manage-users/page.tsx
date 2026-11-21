@@ -28,6 +28,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { getUsers } from "@/lib/actions/api/data";
+import { updateUsers } from "@/lib/actions/api/services";
 
 const roles = ["Customer", "Technician", "Admin"] as const;
 
@@ -35,45 +37,16 @@ type Role = (typeof roles)[number];
 type RoleFilter = Role | "All";
 
 type UserRow = {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   role: Role;
-  joined: string;
+  createdAt: string;
   isCurrent?: boolean;
 };
 
-const initialUsers: UserRow[] = [
-  {
-    id: "usr-1",
-    name: "Farhana Ahmed",
-    email: "farhana@example.com",
-    role: "Customer",
-    joined: "Jun 02, 2025",
-  },
-  {
-    id: "usr-2",
-    name: "Nabila Islam",
-    email: "nabila@example.com",
-    role: "Technician",
-    joined: "May 18, 2025",
-  },
-  {
-    id: "usr-3",
-    name: "Tariq Hasan",
-    email: "tariq@example.com",
-    role: "Technician",
-    joined: "Apr 23, 2025",
-  },
-  {
-    id: "usr-4",
-    name: "System Admin",
-    email: "admin@fixmate.example",
-    role: "Admin",
-    joined: "Jan 01, 2025",
-    isCurrent: true,
-  },
-];
+const usersData = await getUsers(); // Fetch users from the backend
+console.log("Fetched users data:", usersData); // Log the fetched data for debugging
 
 const roleStyles: Record<Role, string> = {
   Customer: "border-[#d6e4ff] bg-[#eef4ff] text-[#2563eb]",
@@ -92,12 +65,14 @@ function getInitials(name: string) {
 }
 
 export default function ManageUsersPage() {
-  const [users, setUsers] = useState<UserRow[]>(initialUsers);
+  const [users, setUsers] = useState<UserRow[]>(usersData);
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("All");
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [activeUser, setActiveUser] = useState<UserRow | null>(null);
   const [draftRole, setDraftRole] = useState<Role>("Customer");
+  const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   const filteredUsers = useMemo(() => {
     const search = query.trim().toLowerCase();
@@ -119,15 +94,32 @@ export default function ManageUsersPage() {
     setIsRoleDialogOpen(true);
   }
 
-  function handleConfirmRoleChange() {
-    if (!activeUser) return;
+  async function handleConfirmRoleChange() {
+    if (!activeUser || isUpdatingRole) return;
 
-    setUsers((currentUsers) =>
-      currentUsers.map((user) =>
-        user.id === activeUser.id ? { ...user, role: draftRole } : user
-      )
-    );
-    setIsRoleDialogOpen(false);
+    setActionError("");
+    setIsUpdatingRole(true);
+
+    try {
+      await updateUsers(activeUser._id, { role: draftRole });
+      setUsers((currentUsers) =>
+        currentUsers.map((user) =>
+          user._id === activeUser._id
+            ? { ...user, role: draftRole }
+            : user,
+        ),
+      );
+      setIsRoleDialogOpen(false);
+      setActiveUser(null);
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Could not update the user role.",
+      );
+    } finally {
+      setIsUpdatingRole(false);
+    }
   }
 
   return (
@@ -140,6 +132,15 @@ export default function ManageUsersPage() {
           Search accounts and manage platform roles responsibly.
         </p>
       </div>
+
+      {actionError ? (
+        <p
+          className="rounded-lg border border-[#f6c9c9] bg-[#fdf2f2] px-4 py-3 text-sm text-[#b91c1c]"
+          role="alert"
+        >
+          {actionError}
+        </p>
+      ) : null}
 
       <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xs">
         <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
@@ -210,7 +211,7 @@ export default function ManageUsersPage() {
             {filteredUsers.length > 0 ? (
               filteredUsers.map((user) => (
                 <TableRow
-                  key={user.id}
+                  key={user._id}
                   className="border-slate-100 hover:bg-slate-50/60"
                 >
                   <TableCell className="py-4 pl-6">
@@ -232,7 +233,7 @@ export default function ManageUsersPage() {
                     <span
                       className={cn(
                         "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold",
-                        roleStyles[user.role]
+                        roleStyles[user.role],
                       )}
                     >
                       {user.role}
@@ -240,7 +241,7 @@ export default function ManageUsersPage() {
                   </TableCell>
 
                   <TableCell className="py-4 text-slate-600">
-                    {user.joined}
+                    {user.createdAt}
                   </TableCell>
 
                   <TableCell className="py-4 pr-6">
@@ -342,9 +343,10 @@ export default function ManageUsersPage() {
                 </DialogClose>
                 <Button
                   onClick={handleConfirmRoleChange}
+                  disabled={isUpdatingRole}
                   className="h-10 rounded-lg bg-[#176b63] px-5 text-sm font-semibold text-white shadow-xs hover:bg-[#125851]"
                 >
-                  Confirm Change
+                  {isUpdatingRole ? "Updating..." : "Confirm Change"}
                 </Button>
               </div>
             </>
