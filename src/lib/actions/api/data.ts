@@ -56,3 +56,18 @@ export const getServiceById = async (serviceId: string) => {
   const response = await fetch(`${baseUrl}/services/${serviceId}`);
   return response.json();
 };
+
+export const getBookingByEmail = async (email: string) => {
+  const response = await fetch(
+    `${baseUrl}/bookings?customerEmail=${encodeURIComponent(email)}`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Could not load bookings (${response.status}).`);
+  }
+
+  return response.json();
+};

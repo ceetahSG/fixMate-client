@@ -71,7 +71,7 @@ export default function DashboardSidebar({ user }: DashboardSidebarProps) {
     },
     {
       label: "My Bookings",
-      href: "/dashboard/customer/bookings",
+      href: "/dashboard/customer/my-booking",
       icon: ClipboardCheck,
     },
     {

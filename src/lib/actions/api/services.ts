@@ -1,5 +1,4 @@
 import { tBookingData, TServiceData } from "@/types";
-
 const baseUrl = process.env.BACKEND_URL || "http://localhost:5000";
 
 export const addService = async (serviceData: TServiceData) => {
