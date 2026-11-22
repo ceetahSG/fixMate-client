@@ -1,51 +1,58 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Clock, MoreHorizontal, Users, Wrench } from "lucide-react";
+import { getServices, getUsers } from "@/lib/actions/api/data";
+import { formatServicePrice, normalizeService, type ApiService } from "@/lib/services";
+import type { TUser } from "@/types";
 
 export const metadata = {
   title: "Admin Portal | FixMate",
 };
 
-const activityData = [
-  { month: "Jan", height: "38%" },
-  { month: "Feb", height: "65%" },
-  { month: "Mar", height: "48%" },
-  { month: "Apr", height: "76%" },
-  { month: "May", height: "68%" },
-  { month: "Jun", height: "86%" },
-];
+const statusStyles = {
+  Pending: "bg-[#fef6e7] text-[#c27803] border-[#fae3b8]",
+  Approved: "bg-[#e8f6f2] text-[#176b63] border-[#c4e8de]",
+  Rejected: "bg-[#fdf2f2] text-[#b91c1c] border-[#f6c9c9]",
+};
 
-const pendingSubmissions = [
-  {
-    id: "sub-1",
-    title: "iPhone Screen Replacement",
-    category: "Smartphone",
-    thumbnail: "/images/service-thumb-iphone.jpg",
-    status: "Requested",
-    statusClass: "bg-[#e9f2ff] text-[#2563eb] border-[#d0e3ff]",
-    amount: "$65.00",
-  },
-  {
-    id: "sub-2",
-    title: "MacBook Performance Servicing",
-    category: "Laptop & PC",
-    thumbnail: "/images/service-thumb-macbook.jpg",
-    status: "In Progress",
-    statusClass: "bg-[#fef6e7] text-[#c27803] border-[#fae3b8]",
-    amount: "$45.00",
-  },
-  {
-    id: "sub-3",
-    title: "Smart TV Display Repair",
-    category: "TV",
-    thumbnail: "/images/service-thumb-tv.jpg",
-    status: "Completed",
-    statusClass: "bg-[#e8f6f2] text-[#176b63] border-[#c4e8de]",
-    amount: "$82.00",
-  },
-];
+export default async function AdminDashboardPage() {
+  const [rawUsers, rawServices] = await Promise.all([
+    getUsers().catch(() => []),
+    getServices().catch(() => []),
+  ]);
 
-export default function AdminDashboardPage() {
+  const users: TUser[] = Array.isArray(rawUsers) ? rawUsers : [];
+  const services = Array.isArray(rawServices)
+    ? (rawServices as ApiService[]).map(normalizeService)
+    : [];
+  const pendingServices = services.filter(
+    (service) => service.approvalStatus === "Pending",
+  );
+  const technicianCount = users.filter(
+    (user) => user.role === "Technician",
+  ).length;
+  const customerCount = users.filter((user) => user.role === "Customer").length;
+  const userTotal = users.length;
+  const customerPercentage = userTotal
+    ? Math.round((customerCount / userTotal) * 100)
+    : 0;
+
+  const now = new Date();
+  const activityData = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - 5 + index, 1);
+    const count = services.filter((service) => {
+      const createdAt = new Date(service.createdAt);
+      return (
+        createdAt.getFullYear() === date.getFullYear() &&
+        createdAt.getMonth() === date.getMonth()
+      );
+    }).length;
+
+    return { month: date.toLocaleString("en-US", { month: "short" }), count };
+  });
+  const maxActivity = Math.max(...activityData.map((item) => item.count), 1);
+  const recentPendingServices = pendingServices.slice(0, 3);
+
   return (
     <div className="space-y-6">
       {/* Platform Overview Page Title & Action */}
@@ -81,10 +88,10 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <p className="mt-3 text-2xl font-bold text-slate-900 sm:text-3xl">
-            1,248
+            {userTotal}
           </p>
           <p className="mt-1 text-xs text-slate-400 font-normal">
-            Demo platform data
+            Registered platform accounts
           </p>
         </div>
 
@@ -99,10 +106,10 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <p className="mt-3 text-2xl font-bold text-slate-900 sm:text-3xl">
-            186
+            {technicianCount}
           </p>
           <p className="mt-1 text-xs text-slate-400 font-normal">
-            14% of all users
+            {userTotal ? Math.round((technicianCount / userTotal) * 100) : 0}% of all users
           </p>
         </div>
 
@@ -117,7 +124,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <p className="mt-3 text-2xl font-bold text-slate-900 sm:text-3xl">
-            23
+            {pendingServices.length}
           </p>
           <p className="mt-1 text-xs text-slate-400 font-normal">
             Needs review
@@ -136,7 +143,7 @@ export default function AdminDashboardPage() {
                 Platform activity
               </h2>
               <p className="mt-0.5 text-xs text-slate-400">
-                Demonstration data &middot; Last 6 months
+                Service submissions &middot; Last 6 months
               </p>
             </div>
             <button
@@ -156,7 +163,7 @@ export default function AdminDashboardPage() {
                 className="flex flex-col items-center gap-2.5 h-full justify-end"
               >
                 <div
-                  style={{ height: item.height }}
+                  style={{ height: `${Math.max((item.count / maxActivity) * 100, item.count ? 8 : 0)}%` }}
                   className="w-7 sm:w-10 rounded-t-sm bg-[#6aa79d] transition-all hover:bg-[#57948a]"
                 />
                 <span className="text-xs font-medium text-slate-400 pb-1">
@@ -205,13 +212,13 @@ export default function AdminDashboardPage() {
                 />
               </svg>
               <span className="absolute text-base font-bold text-slate-900">
-                74%
+                {customerPercentage}%
               </span>
             </div>
 
             <div>
               <p className="text-sm font-bold text-slate-900">Customers</p>
-              <p className="mt-0.5 text-xs text-slate-400">Demo data summary</p>
+              <p className="mt-0.5 text-xs text-slate-400">{customerCount} registered customers</p>
             </div>
           </div>
 
@@ -219,15 +226,15 @@ export default function AdminDashboardPage() {
           <div className="flex flex-wrap items-center gap-3.5 border-t border-slate-100 pt-4 text-xs font-medium text-slate-600">
             <span className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-slate-800" />
-              Completed 8
+              Approved {services.filter((service) => service.approvalStatus === "Approved").length}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-[#6aa79d]" />
-              Active 2
+              Available {services.filter((service) => service.isAvailable).length}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-[#d97544]" />
-              Pending 2
+              Pending {pendingServices.length}
             </span>
           </div>
         </div>
@@ -275,14 +282,14 @@ export default function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {pendingSubmissions.map((submission) => (
+              {recentPendingServices.map((submission) => (
                 <tr key={submission.id} className="group transition-colors">
                   {/* Service Thumbnail & Titles */}
                   <td className="py-4">
                     <div className="flex items-center gap-3">
                       <div className="relative size-10 shrink-0 overflow-hidden rounded-lg bg-slate-100">
                         <Image
-                          src={submission.thumbnail}
+                          src={submission.image}
                           alt={submission.title}
                           fill
                           sizes="40px"
@@ -294,7 +301,7 @@ export default function AdminDashboardPage() {
                           {submission.title}
                         </p>
                         <p className="text-xs text-slate-400">
-                          {submission.category}
+                          {submission.category} · {submission.technicianName}
                         </p>
                       </div>
                     </div>
@@ -303,15 +310,15 @@ export default function AdminDashboardPage() {
                   {/* Status Badge */}
                   <td className="py-4 text-center">
                     <span
-                      className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${submission.statusClass}`}
+                      className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${statusStyles[submission.approvalStatus]}`}
                     >
-                      {submission.status}
+                      {submission.approvalStatus}
                     </span>
                   </td>
 
                   {/* Amount */}
                   <td className="py-4 text-center font-bold text-slate-900">
-                    {submission.amount}
+                    {formatServicePrice(submission.price)}
                   </td>
 
                   {/* Action */}

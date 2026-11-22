@@ -72,6 +72,18 @@ export const getBookingByEmail = async (email: string) => {
   return response.json();
 };
 
+export const getBookings = async () => {
+  const response = await fetch(`${baseUrl}/bookings`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Could not load bookings (${response.status}).`);
+  }
+
+  return response.json();
+};
+
 export const getBookingByTechnicianEmail = async (email: string) => {
   const response = await fetch(
     `${baseUrl}/bookings?technicianEmail=${encodeURIComponent(email)}`,
