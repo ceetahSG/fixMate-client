@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteBooking } from "@/lib/actions/api/bookings";
@@ -54,12 +55,14 @@ export default function BookingAction({
 
   if (booking.status === "completed" && booking.paymentStatus === "unpaid") {
     return (
-      <Button
-        type="button"
-        className="h-10 rounded-lg bg-[#176b63] px-5 text-sm font-semibold text-white shadow-xs hover:bg-[#125851]"
+      <Link
+        href={`/dashboard/customer/payment?bookingId=${encodeURIComponent(
+          booking._id ?? "",
+        )}`}
+        className="inline-flex h-10 items-center justify-center rounded-lg bg-[#176b63] px-5 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-[#125851] focus-visible:ring-2 focus-visible:ring-[#176b63]/30 focus-visible:outline-none"
       >
         Pay Now
-      </Button>
+      </Link>
     );
   }
 

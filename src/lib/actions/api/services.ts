@@ -78,3 +78,46 @@ export const addBooking = async (bookingData: tBookingData) => {
   }
   return result;
 };
+
+export const savePaymentIntent = async (
+  bookingId: string,
+  serviceTitle: string,
+  customerName: string,
+  customerEmail: string,
+  technicianName: string,
+  technicianEmail: string,
+  amount: number,
+  currency: string,
+  transactionId: string,
+  stripeSessionId: string,
+  paymentStatus: string,
+  paidAt: string,
+) => {
+  const response = await fetch(`${baseUrl}/payments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      bookingId,
+      serviceTitle,
+      customerName,
+      customerEmail,
+      technicianName,
+      technicianEmail,
+      amount,
+      currency,
+      transactionId,
+      stripeSessionId,
+      paymentStatus,
+      paidAt,
+    }),
+  });
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result?.message || "Could not save the payment intent.");
+  } else {
+    console.log("Payment intent saved successfully:", result);
+  }
+  return result;
+};
