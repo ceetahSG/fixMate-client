@@ -7,11 +7,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-
-export type BookingActivityPoint = {
-  month: string;
-  bookings: number;
-};
+import type { BookingActivityPoint } from "@/lib/booking-utils";
 
 const chartConfig = {
   bookings: {
