@@ -121,3 +121,15 @@ export const savePaymentIntent = async (
   }
   return result;
 };
+
+export const getPaymentHistory = async (email: string, role: string) => {
+  const response = await fetch(
+    `${baseUrl}/payments?${role === "Customer" ? "customerEmail" : "technicianEmail"}=${encodeURIComponent(email)}`,
+    { cache: "no-store" },
+  );
+  const result = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(result?.message || "Could not fetch the payment history.");
+  }
+  return result;
+};

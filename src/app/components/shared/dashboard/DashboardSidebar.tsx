@@ -76,7 +76,7 @@ export default function DashboardSidebar({ user }: DashboardSidebarProps) {
     },
     {
       label: "Payment History",
-      href: "/dashboard/customer/payments",
+      href: "/dashboard/customer/payment-history",
       icon: CreditCard,
     },
     {
