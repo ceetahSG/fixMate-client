@@ -36,6 +36,7 @@ import { authClient } from "@/lib/auth-client";
 import { getMyServices } from "@/lib/actions/api/data";
 import { TServiceData } from "@/types";
 import { deleteService, updateService } from "@/lib/actions/api/services";
+import { toast } from "@/components/ui/toast";
 
 type ServiceStatus = "Pending" | "Approved" | "Rejected";
 
@@ -90,7 +91,16 @@ export default function MyServicesPage() {
 
     try {
       await updateService(id, { isAvailable });
+      toast.add({
+        title: "Availability updated",
+        description: isAvailable
+          ? "Service is now available."
+          : "Service is now unavailable.",
+        type: "success",
+      });
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not update availability.";
       setServices((currentServices) =>
         currentServices.map((service) =>
           service._id === id
@@ -98,11 +108,12 @@ export default function MyServicesPage() {
             : service,
         ),
       );
-      setActionError(
-        error instanceof Error
-          ? error.message
-          : "Could not update availability.",
-      );
+      setActionError(message);
+      toast.add({
+        title: "Availability update failed",
+        description: message,
+        type: "error",
+      });
     }
   }
 
@@ -149,12 +160,17 @@ export default function MyServicesPage() {
         ),
       );
       setIsEditOpen(false);
+      toast.add({
+        title: "Service updated",
+        description: "Your service changes were saved for review.",
+        type: "success",
+      });
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not update the service.";
       setActionError(
-        error instanceof Error
-          ? error.message
-          : "Could not update the service.",
+        message,
       );
+      toast.add({ title: "Service update failed", description: message, type: "error" });
     } finally {
       setIsSaving(false);
     }
@@ -182,12 +198,17 @@ export default function MyServicesPage() {
         ),
       );
       setIsDeleteOpen(false);
+      toast.add({
+        title: "Service deleted",
+        description: "The service has been removed from your listings.",
+        type: "success",
+      });
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not delete the service.";
       setActionError(
-        error instanceof Error
-          ? error.message
-          : "Could not delete the service.",
+        message,
       );
+      toast.add({ title: "Service deletion failed", description: message, type: "error" });
     } finally {
       setIsSaving(false);
     }

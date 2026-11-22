@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { getServices } from "@/lib/actions/api/data";
 import { TServiceData } from "@/types";
 import { updateService } from "@/lib/actions/api/services";
+import { toast } from "@/components/ui/toast";
 
 type ServiceStatus = "Pending" | "Approved" | "Rejected";
 type TabValue = "pending" | "all" | "approved" | "rejected";
@@ -205,12 +206,17 @@ export default function ServiceApprovalPage() {
             : service,
         ),
       );
+      toast.add({
+        title: "Service approved",
+        description: "The service is now visible in the marketplace.",
+        type: "success",
+      });
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not approve the service.";
       setActionError(
-        error instanceof Error
-          ? error.message
-          : "Could not approve the service.",
+        message,
       );
+      toast.add({ title: "Approval failed", description: message, type: "error" });
     } finally {
       setUpdatingId(null);
     }
@@ -238,12 +244,17 @@ export default function ServiceApprovalPage() {
       );
       setIsRejectDialogOpen(false);
       setActiveService(null);
+      toast.add({
+        title: "Service rejected",
+        description: "The service approval request was rejected.",
+        type: "success",
+      });
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not reject the service.";
       setActionError(
-        error instanceof Error
-          ? error.message
-          : "Could not reject the service.",
+        message,
       );
+      toast.add({ title: "Rejection failed", description: message, type: "error" });
     } finally {
       setUpdatingId(null);
     }

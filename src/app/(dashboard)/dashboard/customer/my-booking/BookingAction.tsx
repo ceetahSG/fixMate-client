@@ -6,6 +6,7 @@ import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteBooking } from "@/lib/actions/api/bookings";
 import type { tBookingData } from "@/types";
+import { toast } from "@/components/ui/toast";
 
 type BookingRecord = tBookingData & { _id?: string };
 
@@ -23,12 +24,18 @@ export default function BookingAction({
 
     try {
       await deleteBooking(booking._id ?? "");
+      toast.add({
+        title: "Booking cancelled",
+        description: "The repair request has been cancelled.",
+        type: "success",
+      });
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not cancel the booking.";
       setActionError(
-        error instanceof Error
-          ? error.message
-          : "Could not cancel the booking.",
+        message,
       );
+      toast.add({ title: "Could not cancel booking", description: message, type: "error" });
     } finally {
       setIsCancelling(false);
     }

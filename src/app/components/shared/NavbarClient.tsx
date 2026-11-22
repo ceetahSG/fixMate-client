@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/sheet";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
+import { toast } from "@/components/ui/toast";
 
 export type NavbarUser = {
   name: string;
@@ -68,7 +69,21 @@ export default function NavbarClient({ user }: NavbarClientProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
-    await authClient.signOut();
+    try {
+      await authClient.signOut();
+      toast.add({
+        title: "Signed out",
+        description: "Your session has ended.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Sign out error:", error);
+      toast.add({
+        title: "Sign-out failed",
+        description: "Could not end your session. Please try again.",
+        type: "error",
+      });
+    }
     setMobileMenuOpen(false);
     router.push("/");
     router.refresh();

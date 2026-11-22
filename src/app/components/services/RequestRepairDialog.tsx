@@ -19,6 +19,7 @@ import { addBooking } from "@/lib/actions/api/services";
 import { getBookingByEmail } from "@/lib/actions/api/data";
 import { authClient } from "@/lib/auth-client";
 import type { tBookingData } from "@/types";
+import { toast } from "@/components/ui/toast";
 
 type RequestRepairDialogProps = {
   serviceId: string;
@@ -79,6 +80,11 @@ export default function RequestRepairDialog({
           `This customer has already booked "${serviceTitle}" (${serviceId}).`,
         );
         setSubmitError("You have already booked this service.");
+        toast.add({
+          title: "Service already booked",
+          description: "You already have an active booking for this service.",
+          type: "warning",
+        });
         return;
       }
 
@@ -106,12 +112,15 @@ export default function RequestRepairDialog({
 
       form.reset();
       setIsOpen(false);
+      toast.add({
+        title: "Repair request submitted",
+        description: "The technician will review your booking shortly.",
+        type: "success",
+      });
     } catch (error) {
-      setSubmitError(
-        error instanceof Error
-          ? error.message
-          : "Could not submit the booking.",
-      );
+      const message = error instanceof Error ? error.message : "Could not submit the booking.";
+      setSubmitError(message);
+      toast.add({ title: "Booking failed", description: message, type: "error" });
     } finally {
       setIsSubmitting(false);
     }

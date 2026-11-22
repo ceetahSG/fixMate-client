@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { updateBookingStatus } from "@/lib/actions/api/bookings";
+import { toast } from "@/components/ui/toast";
 import type { tBookingData } from "@/types";
 
 export type TechnicianRequest = Omit<tBookingData, "status"> & {
@@ -293,19 +294,31 @@ export default function ManageRequestsBoard({
     try {
       await updateBookingStatus(request._id, status);
 
+      toast.add({
+        title: "Booking status updated",
+        description: `The request is now ${status.replace("-", " ")}.`,
+        type: "success",
+      });
+
       setItems((current) =>
         current.map((item) =>
           getRequestKey(item) === key ? { ...item, status } : item,
         ),
       );
     } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Could not update the booking status.";
       setActionErrors((current) => ({
         ...current,
-        [key]:
-          error instanceof Error
-            ? error.message
-            : "Could not update the booking status.",
+        [key]: message,
       }));
+      toast.add({
+        title: "Status update failed",
+        description: message,
+        type: "error",
+      });
     } finally {
       setPendingKey(null);
     }

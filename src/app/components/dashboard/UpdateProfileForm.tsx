@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { toast } from "@/components/ui/toast";
 
 type UpdateProfileFormProps = {
   initialName?: string;
@@ -65,6 +66,11 @@ export default function UpdateProfileForm({
       bio,
       hasNewPhoto: !!previewUrl && previewUrl !== initialImage,
     });
+    toast.add({
+      title: "Profile updated",
+      description: "Your profile changes are ready to use across FixMate.",
+      type: "success",
+    });
   };
 
   const handleCancel = () => {
@@ -74,6 +80,11 @@ export default function UpdateProfileForm({
     setArea(initialArea);
     setBio(initialBio);
     setPreviewUrl(initialImage);
+    toast.add({
+      title: "Changes discarded",
+      description: "Your profile form was restored to its previous values.",
+      type: "info",
+    });
   };
 
   return (

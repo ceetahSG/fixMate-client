@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/sheet";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
+import { toast } from "@/components/ui/toast";
 
 export type DashboardUser = {
   name?: string | null;
@@ -157,8 +158,18 @@ export default function DashboardSidebar({ user }: DashboardSidebarProps) {
   const handleSignOut = async () => {
     try {
       await authClient.signOut();
+      toast.add({
+        title: "Signed out",
+        description: "Your session has ended.",
+        type: "success",
+      });
     } catch (err) {
       console.error("Sign out error:", err);
+      toast.add({
+        title: "Sign-out failed",
+        description: "Could not end your session. Please try again.",
+        type: "error",
+      });
     }
     setMobileOpen(false);
     router.push("/signin");

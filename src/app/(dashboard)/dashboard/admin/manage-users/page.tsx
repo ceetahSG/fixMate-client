@@ -30,6 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getUsers } from "@/lib/actions/api/data";
 import { updateUsers } from "@/lib/actions/api/services";
+import { toast } from "@/components/ui/toast";
 
 const roles = ["Customer", "Technician", "Admin"] as const;
 
@@ -111,12 +112,18 @@ export default function ManageUsersPage() {
       );
       setIsRoleDialogOpen(false);
       setActiveUser(null);
+      toast.add({
+        title: "User role updated",
+        description: `${activeUser.name} is now a ${draftRole}.`,
+        type: "success",
+      });
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not update the user role.";
       setActionError(
-        error instanceof Error
-          ? error.message
-          : "Could not update the user role.",
+        message,
       );
+      toast.add({ title: "Role update failed", description: message, type: "error" });
     } finally {
       setIsUpdatingRole(false);
     }

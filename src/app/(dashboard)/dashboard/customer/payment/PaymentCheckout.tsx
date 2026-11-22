@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import type { tBookingData } from "@/types";
+import { toast } from "@/components/ui/toast";
 
 export type PaymentBooking = tBookingData & { _id?: string };
 
@@ -110,13 +111,19 @@ export default function PaymentCheckout({
         throw new Error(result?.message || "Could not start Stripe checkout.");
       }
 
+      toast.add({
+        title: "Secure checkout ready",
+        description: "Redirecting you to Stripe to complete payment.",
+        type: "success",
+      });
       window.location.assign(result.url);
     } catch (checkoutError) {
-      setError(
+      const message =
         checkoutError instanceof Error
           ? checkoutError.message
-          : "Could not start Stripe checkout.",
-      );
+          : "Could not start Stripe checkout.";
+      setError(message);
+      toast.add({ title: "Payment could not start", description: message, type: "error" });
       setIsSubmitting(false);
     }
   }

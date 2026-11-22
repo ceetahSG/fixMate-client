@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { toast } from "@/components/ui/toast";
 
 type Role = "Customer" | "Technician";
 
@@ -31,11 +32,21 @@ export default function SignUpPage() {
 
     if (password.length < 8) {
       setPasswordError("Password must be at least 8 characters.");
+      toast.add({
+        title: "Sign-up needs attention",
+        description: "Password must be at least 8 characters.",
+        type: "warning",
+      });
       return;
     }
 
     if (password !== confirmPassword) {
       setConfirmPasswordError("Passwords do not match.");
+      toast.add({
+        title: "Passwords do not match",
+        description: "Check both password fields and try again.",
+        type: "warning",
+      });
       return;
     }
 
@@ -50,8 +61,18 @@ export default function SignUpPage() {
     });
     if (error) {
       console.error("Sign up error:", error);
+      toast.add({
+        title: "Sign-up failed",
+        description: error.message || "Could not create your account.",
+        type: "error",
+      });
     } else {
       console.log("Sign up successful:", data);
+      toast.add({
+        title: "Account created",
+        description: "Your FixMate account is ready.",
+        type: "success",
+      });
       router.push("/"); // Redirect to sign-in page after successful sign-up
     }
   };

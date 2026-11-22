@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { authClient } from "@/lib/auth-client";
 import { addService } from "@/lib/actions/api/services";
 import { TServiceData } from "@/types";
+import { toast } from "@/components/ui/toast";
 
 const categories = [
   "Smartphone",
@@ -142,14 +143,19 @@ export default function AddServicePage() {
       const res = await addService(serviceData as TServiceData);
       if (res.insertedId) {
         console.log("Service added successfully!");
+        toast.add({
+          title: "Service submitted",
+          description: "Your new service is waiting for approval.",
+          type: "success",
+        });
         resetForm();
       } else {
         throw new Error(res.message || "Could not save the service.");
       }
     } catch (error) {
-      setFormError(
-        error instanceof Error ? error.message : "Could not save the service.",
-      );
+      const message = error instanceof Error ? error.message : "Could not save the service.";
+      setFormError(message);
+      toast.add({ title: "Service could not be saved", description: message, type: "error" });
     }
   }
 

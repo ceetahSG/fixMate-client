@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { toast } from "@/components/ui/toast";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -27,13 +28,28 @@ export default function SignInPage() {
     });
     if (error) {
       console.error("Sign-in error:", error);
+      toast.add({
+        title: "Sign-in failed",
+        description: error.message || "Please check your credentials and try again.",
+        type: "error",
+      });
     } else {
       console.log("Sign-in successful:", data);
+      toast.add({
+        title: "Welcome back",
+        description: "You have been signed in successfully.",
+        type: "success",
+      });
       router.push("/");
     }
   };
 
   const handleGoogleSignIn = () => {
+    toast.add({
+      title: "Google sign-in unavailable",
+      description: "Google authentication is not configured yet.",
+      type: "warning",
+    });
     console.log({
       provider: "google",
     });
