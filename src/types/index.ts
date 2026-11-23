@@ -7,6 +7,16 @@ export type TUser = {
   img?: string;
 };
 
+export type TBookingStatus =
+  | "requested"
+  | "accepted"
+  | "in-progress"
+  | "completed"
+  | "cancelled"
+  | "rejected";
+
+export type TPaymentStatus = "paid" | "unpaid";
+
 export type TServiceData = {
   _id?: string;
   title: string;
@@ -38,7 +48,7 @@ export type tBookingData = {
   address: string;
   preferredDate: string;
   problemDescription: string;
-  status: "requested" | "in-progress" | "completed" | "cancelled";
+  status: TBookingStatus;
   finalAmount: number;
-  paymentStatus: "unpaid" | "paid";
+  paymentStatus: TPaymentStatus;
 };

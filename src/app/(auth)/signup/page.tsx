@@ -50,10 +50,7 @@ export default function SignUpPage() {
       return;
     }
 
-    const form = new FormData(e.currentTarget as HTMLFormElement);
-    const formData = Object.fromEntries(form.entries());
-    console.log(formData);
-    const { data, error } = await authClient.signUp.email({
+    const { error } = await authClient.signUp.email({
       name: fullName,
       email: email,
       password: password,
@@ -67,7 +64,6 @@ export default function SignUpPage() {
         type: "error",
       });
     } else {
-      console.log("Sign up successful:", data);
       toast.add({
         title: "Account created",
         description: "Your FixMate account is ready.",

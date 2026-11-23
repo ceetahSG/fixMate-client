@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
+import { updateProfile } from "@/lib/actions/api/services";
 
 type UpdateProfileFormProps = {
   initialName?: string;
@@ -55,22 +56,23 @@ export default function UpdateProfileForm({
     setPreviewUrl(url);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({
-      name,
-      email,
-      role: initialRole,
-      phone,
-      area,
-      bio,
-      hasNewPhoto: !!previewUrl && previewUrl !== initialImage,
-    });
-    toast.add({
-      title: "Profile updated",
-      description: "Your profile changes are ready to use across FixMate.",
-      type: "success",
-    });
+    try {
+      await updateProfile({ name, phone, address: area });
+      toast.add({
+        title: "Profile updated",
+        description: "Your profile changes are ready to use across FixMate.",
+        type: "success",
+      });
+    } catch (error) {
+      toast.add({
+        title: "Profile update failed",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+        type: "error",
+      });
+    }
   };
 
   const handleCancel = () => {

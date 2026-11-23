@@ -1,4 +1,8 @@
-import type { tBookingData } from "@/types";
+import type {
+  TBookingStatus,
+  TPaymentStatus,
+  tBookingData,
+} from "@/types";
 
 export type BookingRecord = tBookingData & {
   _id?: string;
@@ -62,16 +66,39 @@ const statusConfig: Record<
   },
 };
 
-export function normalizeStatus(status: string) {
-  const value = String(status ?? "").toLowerCase();
+export function normalizeStatus(status: unknown): TBookingStatus {
+  const value = String(status ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s]+/g, "-");
 
   if (value === "accepted" || value === "confirmed") return "accepted";
-  if (value === "in-progress" || value === "in_progress") return "in-progress";
+  if (value === "in-progress") return "in-progress";
   if (value === "completed") return "completed";
   if (value === "rejected") return "rejected";
   if (value === "cancelled" || value === "canceled") return "cancelled";
 
   return "requested";
+}
+
+export function normalizePaymentStatus(status: unknown): TPaymentStatus {
+  return String(status ?? "").trim().toLowerCase() === "paid"
+    ? "paid"
+    : "unpaid";
+}
+
+/**
+ * Backend documents use capitalised values ("Pending", "In Progress", ...)
+ * while the UI works with lowercase canonical statuses.
+ */
+export function normalizeBookingRecord(
+  booking: BookingRecord,
+): BookingRecord {
+  return {
+    ...booking,
+    status: normalizeStatus(booking.status),
+    paymentStatus: normalizePaymentStatus(booking.paymentStatus),
+  };
 }
 
 export function getStatusConfig(status: string) {

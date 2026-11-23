@@ -1,32 +1,23 @@
 "use server";
 
-import { auth } from "@/lib/auth";
+import "server-only";
+
 import { revalidatePath } from "next/cache";
+import { authFetch, backendUrlFor } from "@/lib/auth-fetch";
 
-const baseUrl = process.env.BACKEND_URL || "http://localhost:5000";
-
-export const getToken = async () => {
-  const jwtToken = await auth.api.getToken();
-  if (!jwtToken || !jwtToken.token) {
-    throw new Error("No session found. User might not be authenticated.");
-  }
-  return jwtToken.token;
-};
-
-export const authFetch = async (api: string) => {
-  const token = await getToken();
-  const res = await fetch(api, {
-    headers: {
-      authorization: `Bearer ${token}`,
-    },
-  });
-  return res;
-};
+export type BookingStatusUpdate =
+  | "accepted"
+  | "rejected"
+  | "completed"
+  | "in-progress";
 
 export async function deleteBooking(bookingId: string) {
-  const response = await fetch(`${baseUrl}/bookings/${bookingId}`, {
-    method: "DELETE",
-  });
+  const response = await authFetch(
+    backendUrlFor(`/api/bookings/${encodeURIComponent(bookingId)}/cancel`),
+    {
+      method: "PATCH",
+    },
+  );
 
   const result = await response.json().catch(() => null);
   if (!response.ok) {
@@ -39,15 +30,18 @@ export async function deleteBooking(bookingId: string) {
 
 export const updateBookingStatus = async (
   bookingId: string,
-  status: "accepted" | "rejected" | "completed" | "in-progress",
+  status: BookingStatusUpdate,
 ) => {
-  const response = await fetch(`${baseUrl}/bookings/${bookingId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await authFetch(
+    backendUrlFor(`/api/bookings/${encodeURIComponent(bookingId)}/status`),
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
     },
-    body: JSON.stringify({ status }),
-  });
+  );
 
   const result = await response.json().catch(() => null);
   if (!response.ok) {
@@ -56,5 +50,5 @@ export const updateBookingStatus = async (
 
   revalidatePath("/dashboard/customer/my-booking");
   revalidatePath("/dashboard/technician/manage-request");
-  return result;
+  return { ...result, status };
 };

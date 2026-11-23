@@ -7,6 +7,7 @@ const client = new MongoClient(process.env.MONGODB_URI as string);
 const db = client.db("fixMateDb");
 
 export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL,
   database: mongodbAdapter(db, {
     client,
   }),
@@ -21,7 +22,13 @@ export const auth = betterAuth({
     },
   },
 
-  plugins: [jwt()],
+  plugins: [
+    jwt({
+      jwks: {
+        jwksPath: "/jwks",
+      },
+    }),
+  ],
   session: {
     cookieCache: {
       enabled: true,

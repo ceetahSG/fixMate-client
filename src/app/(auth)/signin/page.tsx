@@ -18,10 +18,7 @@ export default function SignInPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const form = new FormData(e.currentTarget as HTMLFormElement);
-    const form_data = Object.fromEntries(form.entries());
-    console.log(form_data);
-    const { data, error } = await authClient.signIn.email({
+    const { error } = await authClient.signIn.email({
       email: email,
       password: password,
       // An optional URL to redirect to after the user signs in. (optional)
@@ -34,7 +31,6 @@ export default function SignInPage() {
         type: "error",
       });
     } else {
-      console.log("Sign-in successful:", data);
       toast.add({
         title: "Welcome back",
         description: "You have been signed in successfully.",

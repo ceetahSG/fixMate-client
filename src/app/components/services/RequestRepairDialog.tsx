@@ -16,9 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { addBooking } from "@/lib/actions/api/services";
-import { getBookingByEmail } from "@/lib/actions/api/data";
 import { authClient } from "@/lib/auth-client";
-import type { tBookingData } from "@/types";
 import { toast } from "@/components/ui/toast";
 
 type RequestRepairDialogProps = {
@@ -35,7 +33,6 @@ const fieldClassName =
   "h-11 rounded-md border-slate-300 bg-[#fafafa] px-3 text-sm text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:border-[#176b63] focus-visible:ring-[#176b63]/20";
 
 const labelClassName = "text-sm font-semibold text-slate-900";
-type BookingRecord = tBookingData & { _id?: string };
 
 export default function RequestRepairDialog({
   serviceId,
@@ -62,31 +59,6 @@ export default function RequestRepairDialog({
     try {
       const customerEmail =
         session?.user?.email ?? String(formData.get("email") ?? "").trim();
-      const existingBookings = await getBookingByEmail(customerEmail).catch(
-        () => [],
-      );
-      const bookings: BookingRecord[] = Array.isArray(existingBookings)
-        ? existingBookings
-        : [];
-      const activeStatuses = new Set(["requested", "in-progress"]);
-      const alreadyBooked = bookings.some(
-        (booking) =>
-          booking.serviceId === serviceId &&
-          activeStatuses.has(booking.status),
-      );
-
-      if (alreadyBooked) {
-        console.log(
-          `This customer has already booked "${serviceTitle}" (${serviceId}).`,
-        );
-        setSubmitError("You have already booked this service.");
-        toast.add({
-          title: "Service already booked",
-          description: "You already have an active booking for this service.",
-          type: "warning",
-        });
-        return;
-      }
 
       await addBooking({
         serviceId,

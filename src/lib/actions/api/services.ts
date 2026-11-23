@@ -1,9 +1,12 @@
+"use server";
+
 import { tBookingData, TServiceData } from "@/types";
-import { getSession } from "better-auth/api";
-const baseUrl = process.env.BACKEND_URL || "http://localhost:5000";
+import "server-only";
+
+import { authFetch, backendUrlFor } from "@/lib/auth-fetch";
 
 export const addService = async (serviceData: TServiceData) => {
-  const response = await fetch(`${baseUrl}/services`, {
+  const response = await authFetch(backendUrlFor("/api/services"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -17,13 +20,16 @@ export const updateService = async (
   serviceId: string,
   updatedData: Partial<TServiceData>,
 ) => {
-  const response = await fetch(`${baseUrl}/services/${serviceId}`, {
+  const response = await authFetch(
+    backendUrlFor(`/api/services/${encodeURIComponent(serviceId)}`),
+    {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(updatedData),
-  });
+    },
+  );
 
   const result = await response.json().catch(() => null);
   if (!response.ok) {
@@ -32,11 +38,37 @@ export const updateService = async (
   return result;
 };
 
+export const updateServiceApproval = async (
+  serviceId: string,
+  approvalStatus: "Approved" | "Rejected",
+) => {
+  const response = await authFetch(
+    backendUrlFor(
+      `/api/admin/services/${encodeURIComponent(serviceId)}/approval`,
+    ),
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ approvalStatus }),
+    },
+  );
+
+  const result = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(result?.message || "Could not update service approval.");
+  }
+  return result;
+};
+
 export const deleteService = async (serviceId: string) => {
-  console.log("Deleting service with ID:", serviceId);
-  const response = await fetch(`${baseUrl}/delete-services/${serviceId}`, {
+  const response = await authFetch(
+    backendUrlFor(`/api/services/${encodeURIComponent(serviceId)}`),
+    {
     method: "DELETE",
-  });
+    },
+  );
 
   const result = await response.json();
   if (!response.ok) {
@@ -49,13 +81,16 @@ export const updateUsers = async (
   userId: string,
   updatedData: Partial<{ role: "Customer" | "Technician" | "Admin" }>,
 ) => {
-  const response = await fetch(`${baseUrl}/users/${userId}`, {
+  const response = await authFetch(
+    backendUrlFor(`/api/admin/users/${encodeURIComponent(userId)}/role`),
+    {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(updatedData),
-  });
+    },
+  );
 
   const result = await response.json().catch(() => null);
   if (!response.ok) {
@@ -65,7 +100,33 @@ export const updateUsers = async (
 };
 
 export const addBooking = async (bookingData: tBookingData) => {
-  const response = await fetch(`${baseUrl}/bookings`, {
+  const existingResponse = await authFetch(backendUrlFor("/api/bookings/my"), {
+    cache: "no-store",
+  });
+
+  if (existingResponse.ok) {
+    const existing = await existingResponse.json().catch(() => []);
+    const activeStatuses = new Set([
+      "pending",
+      "requested",
+      "accepted",
+      "in progress",
+      "in-progress",
+    ]);
+    const alreadyBooked =
+      Array.isArray(existing) &&
+      existing.some(
+        (booking) =>
+          String(booking?.serviceId) === String(bookingData.serviceId) &&
+          activeStatuses.has(String(booking?.status).trim().toLowerCase()),
+      );
+
+    if (alreadyBooked) {
+      throw new Error("You have already booked this service.");
+    }
+  }
+
+  const response = await authFetch(backendUrlFor("/api/bookings"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -80,45 +141,39 @@ export const addBooking = async (bookingData: tBookingData) => {
   return result;
 };
 
-export const savePaymentIntent = async (
-  bookingId: string,
-  serviceTitle: string,
-  customerName: string,
-  customerEmail: string,
-  technicianName: string,
-  technicianEmail: string,
-  amount: number,
-  currency: string,
-  transactionId: string,
-  stripeSessionId: string,
-  paymentStatus: string,
-  paidAt: string,
-) => {
-  const response = await fetch(`${baseUrl}/payments`, {
+export const confirmPayment = async (sessionId: string) => {
+  const response = await authFetch(backendUrlFor("/api/payments/confirm"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      bookingId,
-      serviceTitle,
-      customerName,
-      customerEmail,
-      technicianName,
-      technicianEmail,
-      amount,
-      currency,
-      transactionId,
-      stripeSessionId,
-      paymentStatus,
-      paidAt,
-    }),
+    body: JSON.stringify({ sessionId }),
   });
-  const result = await response.json();
+
+  const result = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(result?.message || "Could not save the payment intent.");
-  } else {
-    console.log("Payment intent saved successfully:", result);
+    throw new Error(result?.message || "Could not confirm the payment.");
   }
   return result;
 };
+
+export async function updateProfile(profile: {
+  name?: string;
+  phone?: string;
+  address?: string;
+  image?: string;
+}) {
+  const response = await authFetch(backendUrlFor("/api/users/profile"), {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(profile),
+  });
+
+  const result = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(result?.message || "Could not update your profile.");
+  }
+  return result;
+}

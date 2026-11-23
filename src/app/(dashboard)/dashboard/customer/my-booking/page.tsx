@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { tBookingData } from "@/types";
+import { getStatusConfig } from "@/lib/booking-utils";
 import BookingAction from "./BookingAction";
 
 export const metadata = {
@@ -22,20 +23,6 @@ export const metadata = {
 };
 
 type BookingRecord = tBookingData & { _id?: string };
-
-const statusLabels: Record<string, string> = {
-  requested: "Requested",
-  "in-progress": "In Progress",
-  completed: "Completed",
-  rejected: "Rejected",
-};
-
-const statusStyles: Record<string, string> = {
-  Requested: "border-[#d9e6ff] bg-[#eef4ff] text-[#2563eb]",
-  "In Progress": "border-[#fae3b8] bg-[#fef6e7] text-[#c27803]",
-  Completed: "border-[#c4e8de] bg-[#e8f6f2] text-[#176b63]",
-  Cancelled: "border-[#f7c9c9] bg-[#fdf0f0] text-[#c0392b]",
-};
 
 const paymentLabels: Record<string, string> = {
   paid: "Paid",
@@ -80,10 +67,6 @@ function formatPreferredDate(value: string) {
   if (!year || !monthName || !day) return value;
 
   return `${monthName} ${day}, ${year}`;
-}
-
-function getStatusLabel(status: string) {
-  return statusLabels[status] ?? status;
 }
 
 function getPaymentLabel(paymentStatus: string) {
@@ -167,7 +150,7 @@ export default async function MyBookingPage() {
             <TableBody>
               {bookings.length > 0 ? (
                 bookings.map((booking, index) => {
-                  const status = getStatusLabel(booking.status);
+                  const status = getStatusConfig(booking.status);
                   const payment = getPaymentLabel(booking.paymentStatus);
                   const amount = Number.isFinite(booking.finalAmount)
                     ? booking.finalAmount
@@ -215,11 +198,10 @@ export default async function MyBookingPage() {
                         <span
                           className={cn(
                             "inline-flex h-6 items-center rounded-full border px-2.5 text-xs font-semibold",
-                            statusStyles[status] ??
-                              "border-slate-200 bg-slate-50 text-slate-600",
+                            status.className,
                           )}
                         >
-                          {status}
+                          {status.label}
                         </span>
                       </TableCell>
 

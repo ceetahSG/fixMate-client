@@ -292,17 +292,18 @@ export default function ManageRequestsBoard({
     setActionErrors((current) => ({ ...current, [key]: "" }));
 
     try {
-      await updateBookingStatus(request._id, status);
+      const saved = await updateBookingStatus(request._id, status);
+      const nextStatus = (saved?.status ?? status) as RequestStatus;
 
       toast.add({
         title: "Booking status updated",
-        description: `The request is now ${status.replace("-", " ")}.`,
+        description: `The request is now ${statusConfig[nextStatus].label}.`,
         type: "success",
       });
 
       setItems((current) =>
         current.map((item) =>
-          getRequestKey(item) === key ? { ...item, status } : item,
+          getRequestKey(item) === key ? { ...item, status: nextStatus } : item,
         ),
       );
     } catch (error) {

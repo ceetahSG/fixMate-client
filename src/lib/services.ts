@@ -30,6 +30,34 @@ const modeLabels: Record<string, string> = {
   Remote: "Remote",
 };
 
+export type ServiceApprovalStatus = "Pending" | "Approved" | "Rejected";
+
+/**
+ * The backend stores approval values in lowercase while the UI expects the
+ * capitalised labels. Normalise both shapes to capitalised labels.
+ */
+export function normalizeApprovalStatus(
+  value: unknown,
+): ServiceApprovalStatus {
+  const normalized = String(value ?? "").trim().toLowerCase();
+
+  if (normalized === "approved") return "Approved";
+  if (normalized === "rejected") return "Rejected";
+
+  return "Pending";
+}
+
+export function normalizeServiceApproval<T extends { approvalStatus?: unknown; status?: unknown }>(
+  service: T,
+) {
+  return {
+    ...service,
+    approvalStatus: normalizeApprovalStatus(
+      service.approvalStatus ?? service.status,
+    ),
+  };
+}
+
 export function getModeLabel(mode: string) {
   return modeLabels[mode] ?? mode;
 }
@@ -43,9 +71,6 @@ export function formatServicePrice(price: number) {
 }
 
 export function normalizeService(service: ApiService): MarketplaceService {
-  const approval =
-    service.approvalStatus ?? service.status ?? "Pending";
-
   return {
     id:
       service._id ??
@@ -64,10 +89,9 @@ export function normalizeService(service: ApiService): MarketplaceService {
     technicianName: service.technicianName || "FixMate Technician",
     technicianEmail: service.technicianEmail || "",
     estimatedDuration: service.estimatedDuration || "Varies",
-    approvalStatus:
-      approval === "Approved" || approval === "Rejected"
-        ? approval
-        : "Pending",
+    approvalStatus: normalizeApprovalStatus(
+      service.approvalStatus ?? service.status,
+    ),
     isAvailable: service.isAvailable !== false,
     createdAt: service.createdAt || new Date(0).toISOString(),
   };
