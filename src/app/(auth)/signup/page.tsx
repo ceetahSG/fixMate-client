@@ -70,6 +70,7 @@ export default function SignUpPage() {
         type: "success",
       });
       router.push("/"); // Redirect to sign-in page after successful sign-up
+      router.refresh();
     }
   };
 

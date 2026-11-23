@@ -90,9 +90,13 @@ export default function RequestRepairDialog({
         type: "success",
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not submit the booking.";
+      const message = "Could not submit the booking.";
       setSubmitError(message);
-      toast.add({ title: "Booking failed", description: message, type: "error" });
+      toast.add({
+        title: "Booking failed",
+        description: message,
+        type: "error",
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -63,10 +63,26 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
-export default function NavbarClient({ user }: NavbarClientProps) {
+export default function NavbarClient({ user: initialUser }: NavbarClientProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: session, isPending } = authClient.useSession();
+
+  const sessionUser: NavbarUser | null = session?.user
+    ? {
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image ?? null,
+        role:
+          "role" in session.user ? String(session.user.role ?? "") : null,
+      }
+    : null;
+
+  // The server-rendered user is only a fallback until the client session
+  // resolves. Using the live session keeps the navbar in sync immediately
+  // after sign-in/sign-out, without waiting for a full page refresh.
+  const user = isPending ? initialUser : sessionUser;
 
   const handleLogout = async () => {
     try {
@@ -286,7 +302,7 @@ export default function NavbarClient({ user }: NavbarClientProps) {
                     {roleLabel} Dashboard
                   </Link>
                   <Link
-                    href="/profile"
+                    href="/dashboard/update-profile"
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                   >

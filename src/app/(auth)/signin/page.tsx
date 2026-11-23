@@ -37,6 +37,7 @@ export default function SignInPage() {
         type: "success",
       });
       router.push("/");
+      router.refresh();
     }
   };
 

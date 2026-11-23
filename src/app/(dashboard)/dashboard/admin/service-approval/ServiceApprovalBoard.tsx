@@ -215,11 +215,16 @@ export default function ServiceApprovalBoard({
         type: "success",
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not approve the service.";
-      setActionError(
-        message,
-      );
-      toast.add({ title: "Approval failed", description: message, type: "error" });
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Could not approve the service.";
+      setActionError(message);
+      toast.add({
+        title: "Approval failed",
+        description: message,
+        type: "error",
+      });
     } finally {
       setUpdatingId(null);
     }
@@ -253,11 +258,16 @@ export default function ServiceApprovalBoard({
         type: "success",
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not reject the service.";
-      setActionError(
-        message,
-      );
-      toast.add({ title: "Rejection failed", description: message, type: "error" });
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Could not reject the service.";
+      setActionError(message);
+      toast.add({
+        title: "Rejection failed",
+        description: message,
+        type: "error",
+      });
     } finally {
       setUpdatingId(null);
     }
