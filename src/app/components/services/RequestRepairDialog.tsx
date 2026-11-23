@@ -90,7 +90,8 @@ export default function RequestRepairDialog({
         type: "success",
       });
     } catch (error) {
-      const message = "Could not submit the booking.";
+      const message =
+        "Could not submit the booking.You have already booked this service.";
       setSubmitError(message);
       toast.add({
         title: "Booking failed",
