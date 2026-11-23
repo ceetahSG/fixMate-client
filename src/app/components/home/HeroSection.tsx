@@ -21,15 +21,16 @@ export default function HeroSection() {
             {/* Main Headline */}
             <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[46px] lg:leading-[1.14]">
               Broken Device? Get It <br className="hidden sm:inline" />
-              Fixed by{" "}
-              <span className="text-[#176b63]">Verified</span> <br className="hidden sm:inline" />
+              Fixed by <span className="text-[#176b63]">Verified</span>{" "}
+              <br className="hidden sm:inline" />
               <span className="text-[#176b63]">Technicians.</span>
             </h1>
 
             {/* Subtitle / Paragraph */}
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-500 sm:text-base">
-              Find trusted repair professionals for your devices and home appliances.
-              Track every repair and pay only after the job is completed.
+              Find trusted repair professionals for your devices and home
+              appliances. Track every repair and pay only after the job is
+              completed.
             </p>
 
             {/* Search Input Bar */}
@@ -73,13 +74,13 @@ export default function HeroSection() {
               <div className="pointer-events-none absolute -top-3 -left-3 inset-0 rounded-2xl border border-slate-200/70" />
 
               {/* Main Photo Card */}
-              <div className="relative aspect-[4/3.8] w-full overflow-hidden rounded-2xl shadow-md">
+              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl shadow-md">
                 <Image
-                  src="/images/hero-repair-clean.jpg"
-                  alt="Technician repairing circuit board"
+                  src="/images/hero-repair.webp"
+                  alt="Technician repairing a smartphone circuit board"
                   fill
                   sizes="(max-width: 768px) 100vw, 400px"
-                  className="object-cover"
+                  className="object-cover object-center"
                   priority
                 />
               </div>
