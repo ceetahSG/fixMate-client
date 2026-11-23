@@ -1,8 +1,6 @@
 import { headers } from "next/headers";
-import PaymentHistoryTable, {
-  type PaymentRecord,
-} from "./PaymentHistoryTable";
-import { getPaymentHistory } from "@/lib/actions/api/services";
+import PaymentHistoryTable, { type PaymentRecord } from "./PaymentHistoryTable";
+import { getPaymentHistory } from "@/lib/actions/api/data";
 import { auth } from "@/lib/auth";
 
 export const metadata = {

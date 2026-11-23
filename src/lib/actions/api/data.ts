@@ -1,3 +1,4 @@
+import { auth } from "@/lib/auth";
 import {
   isPublicService,
   normalizeService,
@@ -96,4 +97,15 @@ export const getBookingByTechnicianEmail = async (email: string) => {
     throw new Error(`Could not load bookings (${response.status}).`);
   }
   return response.json();
+};
+export const getPaymentHistory = async (email: string, role: string) => {
+  const response = await fetch(
+    `${baseUrl}/payments?${role === "Customer" ? "customerEmail" : "technicianEmail"}=${encodeURIComponent(email)}`,
+  );
+
+  const result = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(result?.message || "Could not fetch the payment history.");
+  }
+  return result;
 };

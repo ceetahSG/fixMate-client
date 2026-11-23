@@ -1,8 +1,27 @@
 "use server";
 
+import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 const baseUrl = process.env.BACKEND_URL || "http://localhost:5000";
+
+export const getToken = async () => {
+  const jwtToken = await auth.api.getToken();
+  if (!jwtToken || !jwtToken.token) {
+    throw new Error("No session found. User might not be authenticated.");
+  }
+  return jwtToken.token;
+};
+
+export const authFetch = async (api: string) => {
+  const token = await getToken();
+  const res = await fetch(api, {
+    headers: {
+      authorization: `Bearer ${token}`,
+    },
+  });
+  return res;
+};
 
 export async function deleteBooking(bookingId: string) {
   const response = await fetch(`${baseUrl}/bookings/${bookingId}`, {

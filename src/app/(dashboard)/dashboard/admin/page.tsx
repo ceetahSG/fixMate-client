@@ -2,7 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Clock, MoreHorizontal, Users, Wrench } from "lucide-react";
 import { getServices, getUsers } from "@/lib/actions/api/data";
-import { formatServicePrice, normalizeService, type ApiService } from "@/lib/services";
+import {
+  formatServicePrice,
+  normalizeService,
+  type ApiService,
+} from "@/lib/services";
 import type { TUser } from "@/types";
 
 export const metadata = {
@@ -67,7 +71,7 @@ export default async function AdminDashboardPage() {
         </div>
 
         <Link
-          href="/dashboard/service-approval"
+          href="/dashboard/admin/service-approval"
           className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#176b63] px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-[#125851] sm:text-sm"
         >
           <span>Review Services</span>
@@ -109,7 +113,8 @@ export default async function AdminDashboardPage() {
             {technicianCount}
           </p>
           <p className="mt-1 text-xs text-slate-400 font-normal">
-            {userTotal ? Math.round((technicianCount / userTotal) * 100) : 0}% of all users
+            {userTotal ? Math.round((technicianCount / userTotal) * 100) : 0}%
+            of all users
           </p>
         </div>
 
@@ -163,7 +168,9 @@ export default async function AdminDashboardPage() {
                 className="flex flex-col items-center gap-2.5 h-full justify-end"
               >
                 <div
-                  style={{ height: `${Math.max((item.count / maxActivity) * 100, item.count ? 8 : 0)}%` }}
+                  style={{
+                    height: `${Math.max((item.count / maxActivity) * 100, item.count ? 8 : 0)}%`,
+                  }}
                   className="w-7 sm:w-10 rounded-t-sm bg-[#6aa79d] transition-all hover:bg-[#57948a]"
                 />
                 <span className="text-xs font-medium text-slate-400 pb-1">
@@ -218,7 +225,9 @@ export default async function AdminDashboardPage() {
 
             <div>
               <p className="text-sm font-bold text-slate-900">Customers</p>
-              <p className="mt-0.5 text-xs text-slate-400">{customerCount} registered customers</p>
+              <p className="mt-0.5 text-xs text-slate-400">
+                {customerCount} registered customers
+              </p>
             </div>
           </div>
 
@@ -226,11 +235,17 @@ export default async function AdminDashboardPage() {
           <div className="flex flex-wrap items-center gap-3.5 border-t border-slate-100 pt-4 text-xs font-medium text-slate-600">
             <span className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-slate-800" />
-              Approved {services.filter((service) => service.approvalStatus === "Approved").length}
+              Approved{" "}
+              {
+                services.filter(
+                  (service) => service.approvalStatus === "Approved",
+                ).length
+              }
             </span>
             <span className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-[#6aa79d]" />
-              Available {services.filter((service) => service.isAvailable).length}
+              Available{" "}
+              {services.filter((service) => service.isAvailable).length}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-[#d97544]" />
@@ -254,7 +269,7 @@ export default async function AdminDashboardPage() {
           </div>
 
           <Link
-            href="/dashboard/service-approval"
+            href="/dashboard/admin/service-approval"
             className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 transition-colors hover:text-[#176b63]"
           >
             <span>View all</span>

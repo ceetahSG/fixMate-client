@@ -1,4 +1,5 @@
 import { tBookingData, TServiceData } from "@/types";
+import { getSession } from "better-auth/api";
 const baseUrl = process.env.BACKEND_URL || "http://localhost:5000";
 
 export const addService = async (serviceData: TServiceData) => {
@@ -118,18 +119,6 @@ export const savePaymentIntent = async (
     throw new Error(result?.message || "Could not save the payment intent.");
   } else {
     console.log("Payment intent saved successfully:", result);
-  }
-  return result;
-};
-
-export const getPaymentHistory = async (email: string, role: string) => {
-  const response = await fetch(
-    `${baseUrl}/payments?${role === "Customer" ? "customerEmail" : "technicianEmail"}=${encodeURIComponent(email)}`,
-    { cache: "no-store" },
-  );
-  const result = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new Error(result?.message || "Could not fetch the payment history.");
   }
   return result;
 };

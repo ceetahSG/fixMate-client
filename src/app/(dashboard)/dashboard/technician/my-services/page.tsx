@@ -100,7 +100,9 @@ export default function MyServicesPage() {
       });
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Could not update availability.";
+        error instanceof Error
+          ? error.message
+          : "Could not update availability.";
       setServices((currentServices) =>
         currentServices.map((service) =>
           service._id === id
@@ -166,11 +168,16 @@ export default function MyServicesPage() {
         type: "success",
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not update the service.";
-      setActionError(
-        message,
-      );
-      toast.add({ title: "Service update failed", description: message, type: "error" });
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Could not update the service.";
+      setActionError(message);
+      toast.add({
+        title: "Service update failed",
+        description: message,
+        type: "error",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -204,11 +211,16 @@ export default function MyServicesPage() {
         type: "success",
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not delete the service.";
-      setActionError(
-        message,
-      );
-      toast.add({ title: "Service deletion failed", description: message, type: "error" });
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Could not delete the service.";
+      setActionError(message);
+      toast.add({
+        title: "Service deletion failed",
+        description: message,
+        type: "error",
+      });
     } finally {
       setIsSaving(false);
     }
